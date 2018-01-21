@@ -2,7 +2,8 @@
  % and store dummy
 % X2 contains constant, price, store dummies fat content dummies 
 
-
+clear
+clc
 global    invA ns X1 X2 s IV vfull dfull theta1 theti thetj cdid cdindex
 %global    ns X1 X2 s IV vfull dfull theta1 theti thetj cdid cdindex
 load milkdata
@@ -29,27 +30,29 @@ theta2w=[2.0682    2.1000    1.0473;
      
 [theti, thetj, theta2]=find(theta2w);
 
-horz=['         mean        sigma       Age     Income      Size        Under15'];
-vert=['constant';
-      'Price   ';
-      'Sugar   ';
-      'Puffed  '];
+% horz=['         mean        sigma       Age     Income      Size        Under15'];
+% vert=['constant';
+%       'Price   ';
+%       'Sugar   ';
+%       'Puffed  '];
  %load invA 
 
  invA =inv(IV'*IV); 
   temp=cumsum(s);
   sum1=temp(cdindex,:);
-  sum1(2:size(sum1,1),:)=diff(sum1);
+  sum1(2:size(sum1,1),:) = diff(sum1);
   outshr=1-sum1(cdid,:);
   y=log(s)-log(outshr);
-  mid=X1'*IV*invA*IV';
+  mid= X1' * IV* invA* IV';
   ttt=inv(mid*X1)*mid*y;
-  mvaold=X1*ttt;
+  mvalold=X1*ttt;
   oldt2=zeros(size(theta2));
-  mvaold=exp(mvaold);
+  mvaold=exp(mvalold);
+  
   save mvaold mvaold oldt2
   %save invA invA
-  clear mid y outshr oldt2 mvaold temp sum1 
+  
+  clear mid y outshr oldt2 mvalold temp sum1 
   
   vfull=v(cdid,:);
   dfull=demogr(cdid,:);
@@ -59,7 +62,8 @@ vert=['constant';
   %options(3)=0.001;
   options=optimset('GradObj','on','TolFun',0.01,'TolX',0.01);
      
-  [theta2,fval]=fminunc(@gmmobj, theta2, options)
+  [theta2,fval] = fminunc(@gmmobj, theta2, options)
+  
   %theta2 = fmins('gmmobj',theta2)
   comp_t=toc/60;
 %  disp(['GMM objective:  ' num2str(options(8))])
@@ -74,5 +78,7 @@ diary off
   theta=[theta1;theta2];
   tst=(theta./se);
   theta2w=full(sparse(theti,thetj,theta2));
+  
+  
   
  

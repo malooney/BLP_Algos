@@ -1,0 +1,68 @@
+---
+title: "Untitled"
+author: "Matthew Aaron Looney"
+date: "11/21/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(R.matlab)
+
+cat("\014")
+rm(list=ls())
+set.seed(12345)
+options(scipen=999)
+
+milkdata <- readMat("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Chidmi_Matlab_Code/milkdata.mat")
+
+I <- milkdata$I
+pr <- milkdata$pr
+PL <- milkdata$PL
+IV <- matrix(c(I, pr, PL), ncol=45) #Instrumental Variables
+
+ns=20 # number of cps draw
+nmkt=58 # number of markets
+nbrn=6 # number of brands
+
+cdid= rep(1:58, each = 6, times = 1)  # gives the market id
+cdindex <- seq(nbrn, nbrn*nmkt, nbrn) # indexes the markets
+
+# starting values. zero elements in the following matrix correspond to coeff 
+# that will not be max over, i.e are fixed at zero.
+theta2w <-  matrix(c(2.0682, 2.1000, 1.0473,
+                   1.5541, 2.0352, -0.8324,
+                   0.6403, 2.6775, 1.3040,
+                   -0.3018, 1.2227, 3.4240,
+                   0.6605, 3.1289, 1.8451,
+                   1.0198, 0.8942, 1.3901), nrow=6, ncol=3)
+
+# create a vector of the non-zero elements in the above matrix, and the 
+# corresponding row and column indices. this facilitates passing values  
+# to the functions below.
+theataij <- which(theta2w != 0, arr.ind=T); theta2 <- theta2w[theataij]
+
+invA <- solve(t(IV) %*% IV) # create weight matrix
+
+# Logit results and save the mean utility as initial values for the search below
+
+# compute the outside good market share by market
+temp <- cumsum(milkdata$s)
+sum1 <- temp[cdindex]
+sum1[2:length(sum1)] <- diff(sum1)
+outshr <- 1- sum1[cdid]
+y <- log(milkdata$s)- log(outshr)
+mid <- t(milkdata$X1)%*% IV%*% invA%*% t(IV)
+ttt <- solve(mid %*% milkdata$X1) %*% mid %*%y
+mvalold <- milkdata$X1 %*% ttt
+oldt2 <- matrix(0, nrow=length(theta2))
+mvalold <- exp(mvalold);
+
+saveRDS(mvalold, file="mvalold.Rds"); saveRDS(oldt2, file="oldt2.Rds")
+rm(mid, y, outshr, ttt, oldt2, mvalold, temp, sum1)
+
+vfull <- milkdata$v[cdid,]
+dfull <- milkdata$demogr[cdid,]
+
+```
