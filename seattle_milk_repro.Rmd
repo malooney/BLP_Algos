@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Reproduce Chidmi Paper"
 author: "Matthew Aaron Looney"
 date: "11/21/2017"
 output: pdf_document
