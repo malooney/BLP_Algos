@@ -1,0 +1,500 @@
+---
+title: "RAW Code adapted from P. Schrimpf"
+author: "Matthew Aaron Looney"
+date: "2/21/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup1, include=FALSE}
+rm(list=ls())
+library(hdm) ## contains BLP data
+library(MASS)
+data(BLP)
+BLP <- BLP$BLP
+## Note: despite what the hdm package's documentation says, price is not
+## log price; it is price - mean(price). If you compare the quantiles
+## of price with Table II from BLP (1995), you see that everything is
+## shifted down by 11.761
+tab2 <- c(3.393, 6.711, 8.728, 13.074, 68.597)
+stopifnot(all(abs(quantile(BLP$price, c(0,0.25,0.5,0.75,1)) - tab2 +
+                  11.761)<0.005))
+BLP$price <- BLP$price + 11.761
+
+#BLP <- subset(BLP,cdid >= 17) ## use small subset to make it faster
+BLP$cdid <- BLP$cdid- min(BLP$cdid)+1
+
+# estimates from Table 3 of BLP paper, column 1
+library(lfe)
+summary(lm(log(share)-log(outshr) ~ hpwt + air + mpd + space + price,
+           data=BLP))
+
+
+## demand instruments
+Z <- hdm:::constructIV(BLP$firm.id, BLP$cdid, BLP$id,
+                       cbind(1,BLP[,c("hpwt","air","mpd","space")]))
+BLP <- cbind(BLP,Z)
+Z <- cbind(1,BLP[,c("hpwt","air","mpd","space")],Z)
+
+## supply instruments
+W <- log(BLP[,c("hpwt","mpg","space")])
+colnames(W) <- paste("log",colnames(W),sep=".")
+Wiv <- hdm:::constructIV(BLP$firm.id, BLP$cdid, BLP$id, W)
+BLP <- cbind(BLP,Wiv)
+W <- cbind(1,BLP[,c("air","trend")],W)
+Wiv <- hdm:::constructIV(BLP$firm.id, BLP$cdid, BLP$id, W)
+Wiv <- cbind(W,Wiv,BLP[,"mpg"])
+
+stopifnot(ncol(Wiv)==19 & ncol(Z)==15) ## numbers of instruments in BLP 1995
+
+iv.logit <- felm(y ~ hpwt + air + mpd + space | 1 |
+                   (price ~ sum.other.hpwt +sum.other.air + sum.other.mpd
+                     + sum.other.space + sum.other.1
+                     + sum.rival.hpwt +sum.rival.air + sum.rival.mpd
+                     + sum.rival.space + sum.rival.1
+                     #+ log(mpg) + trend
+                     #+ sum.other.log.mpg + sum.rival.log.mpg
+                     #+ sum.other.log.hpwt + sum.rival.log.hpwt
+                     #+ sum.other.log.space + sum.rival.log.space
+                   ),
+                 data=BLP)
+
+library(AER)
+
+summary(ivreg(y ~ hpwt + air + mpd + space + price |
+                hpwt+ air + mpd + space + sum.other.hpwt +
+                sum.other.air + sum.other.mpd
+              + sum.other.space + sum.other.1
+              + sum.rival.hpwt +sum.rival.air + sum.rival.mpd
+              + sum.rival.space + sum.rival.1
+              #+ log(mpg) + trend
+              #+ sum.other.log.mpg + sum.rival.log.mpg
+              #+ sum.other.log.hpwt + sum.rival.log.hpwt
+              #+ sum.other.log.space + sum.rival.log.space
+             ,
+              data=BLP))
+
+summary(iv.logit)
+summary(lm(log(price) ~ log(hpwt) + air + log(mpg) + log(space) +
+             trend, data=BLP))
+
+
+
+share.fn <- function(delta, 
+                     x, 
+                     log.y, 
+                     log.yp, 
+                     v, 
+                     alpha, 
+                     sigma)
+{
+  ls <- matrix(delta,nrow=length(log.y),ncol=length(delta),
+               byrow=TRUE) +
+    alpha*log.yp + t(x %*% (t(v)*sigma))
+  els <- exp(ls)
+  s <- els/(exp(alpha*log.y)+rowSums(els))
+  share <- colMeans(s)
+  return(share)
+}
+
+library(Rcpp)
+# Problem with C++ code?????
+cppFunction("
+NumericVector share.fn.c(NumericVector delta,
+                         NumericMatrix x,
+                         NumericVector logy,
+                         NumericMatrix logyp,
+                         double alpha,
+                         NumericVector sigma)
+{
+  size_t N = logy.size();
+  NumericVector si(delta.size());
+  NumericVector s(delta.size());
+  for(size_t j=0;j<delta.size();j++) s[j]=0;
+  for(size_t i=0;i<N;i++) {
+   double den = exp(alpha*logy[i]);
+   for(size_t j=0;j<delta.size();j++) {
+      double muji = alpha*logyp[i,j];
+      for (size_t k=0;k<sigma.size();k++) {
+         muji += x[j,k]*v[i,k]*sigma[k];
+      }
+      si[j]=exp(muji);
+      den+=s[j];
+   }
+   for(size_t j=0;j<delta.size();j++) s[j] += si[j]/den;
+  }
+  for(size_t j=0;j<delta.size();j++) s[j]/=((double) N);
+  return(s);
+}
+")
+
+
+dshare.dp <- function(delta, 
+                      x, 
+                      log.y, 
+                      log.yp, 
+                      dlog.yp, 
+                      v, 
+                      alpha, 
+                      sigma)
+{
+  ls <- matrix(delta,nrow=length(log.y),ncol=length(delta),
+               byrow=TRUE) +
+    alpha*log.yp + t(x %*% (t(v)*sigma))
+  dlsj <- -alpha*dlog.yp
+  els <- exp(ls)
+  s <- els/(exp(alpha*log.y)+rowSums(els))
+  dshare <- -t(s) %*% (s*dlsj) / nrow(s) + diag(colMeans(s*dlsj))
+  return(dshare)
+}
+
+if (!require(SQUAREM)) install.packages("SQUAREM")
+library(SQUAREM)
+delta.fn.sem <- function(s, 
+                         x, 
+                         log.y, 
+                         log.yp, 
+                         v, 
+                         alpha, 
+                         sigma, 
+                         tol=1e-6, 
+                         tol.s=1e-8, 
+                         max.iter=500)
+{
+  fixptfn <- function(delta.old) {
+    sm <- share.fn(delta.old, x, log.y, log.yp, v, alpha,sigma)
+    delta.new <- ifelse(sm>0,delta.old + log(s) - log(sm),
+                        delta.old+log(s)-min(log(sm[sm>0])))
+  }
+  delta.new <- log(s) - log(1-sum(s)) #+ alpha*colMeans(log.yp)
+  out <- squarem(delta.new, fixptfn)
+  return(out$par)
+}
+
+delta.fn <- function(s,x,log.y,log.yp,v,alpha,sigma,
+                     tol=1e-6, tol.s=1e-8,
+                     max.iter=500)
+{
+  delta.new <- log(s) - log(1-sum(s)) #+ alpha*colMeans(log.yp)
+  dd <- 1
+  ds <- 1
+  iter <- 0
+  while ((dd>tol) & (ds>tol.s)) {
+    delta.old <- delta.new
+    sm <- share.fn(delta.old, x, log.y, log.yp, v, alpha,sigma)
+    delta.new <- ifelse(sm>0,delta.old + log(s) - log(sm),
+                        delta.old+log(s)-min(log(sm[sm>0])))
+    dd <- max(abs(delta.old - delta.new))
+    ds <- max(abs(s - sm))
+    iter = iter+1
+    #i <- which.max(abs(delta.old-delta.new))
+    #cat(sprintf("iter=%3d, dd=%8.4g, ds=%8.4g, %8.4g, %8.4g\n", iter,
+    #                 dd, ds, delta.old[i], delta.new[i]))
+    if (iter>max.iter) {
+      i <- which.max(abs(delta.old-delta.new))
+      j <- which.max(abs(s - sm))
+      warning(sprintf("Maximum iterations (%d) reached, returning with norm(delta.new - delta.old) = %.2g\n delta.old = %.4g delta.new=%.4g\n",
+                   max.iter, dd, delta.old[i], delta.new[i]))
+      break;
+    }
+  }
+  return(delta.new)
+}
+
+
+moments <- function(alpha, 
+                    sigma, 
+                    s, 
+                    p, 
+                    x, 
+                    log.yp, 
+                    log.y, 
+                    dlog.yp,
+                    v, 
+                    w, 
+                    zd, 
+                    zs, 
+                    W,
+                    market.id, 
+                    firm.id, 
+                    model.id=NULL, 
+                    delta.tol=1e-10,
+                    max.iter=500, 
+                    supply.side=TRUE)
+{
+  ## Find delta and omega
+  delta <- rep(NA, length(s))
+  omega <- rep(NA, length(s))
+  for (t in unique(market.id)) {
+    #cat(t,"\n")
+    inc <- market.id==t
+    delta[inc] <- delta.fn(s[inc], x[inc,],drop(log.y[t,]),
+                               log.yp[[t]] ,
+                               v=drop(v[t,,]),
+                               alpha,sigma, tol=delta.tol,
+                               tol.s=1e-6, max.iter=max.iter)
+    if (supply.side) {
+      dShare <- dshare.dp(delta[inc], x[inc,], drop(log.y[t,]),
+                          log.yp[[t]], dlog.yp[[t]] , drop(v[t,,]), alpha,sigma)
+      dShare <- dShare* outer(firm.id[inc],firm.id[inc],
+                              function(x,y) x==y)
+      b <- solve(dShare) %*% s[inc]
+      omega[inc] <- log(p[inc]-b)
+    } else {
+      omega[inc] <- 0
+    }
+  }
+
+  ## Solve for beta and gamma
+  X <- as.matrix(rbind(cbind(x,0*w), cbind(0*x,w)))
+  Y <- c(delta, omega)
+  Z <- as.matrix(rbind(cbind(zd,0*zs), cbind(0*zd, zs)))
+  W.in <- W
+  if (W=="ZZ" | W=="3SLS") {
+    W <- solve(t(Z) %*% Z)
+  } else if (is.null(W)) {
+    W <- diag(1,nrow=ncol(Z),ncol=ncol(Z))
+  }
+  B <- solve(t(X) %*% Z %*%  W %*% t(Z) %*% X ,
+             t(X) %*% Z %*% W %*% t(Z) %*% Y)
+  if (W.in=="3SLS") {  ## 3SLS with heteroskedasticity
+    E <- Y - X %*% B
+    g <- drop(E)*Z
+    #V <- crossprod(g)/(nrow(g)/2 - ncol(g))
+
+    ## clustering on model id
+    tmp <- data.frame(id=model.id)
+    tmp <- rbind(tmp,tmp)
+    u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE),
+                   data=tmp)
+    u <- as.matrix(u[,colnames(u) != "id"])
+    V <- crossprod(u)/(length(unique(model.id))-ncol(u))
+
+    #print((length(unique(market.id))-ncol(u)))
+    W <- ginv(V)
+    #print(V)
+    #print(W)
+    B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*%
+      (t(X) %*% Z %*% W %*% t(Z) %*% Y)
+  }
+  beta <- B[1:ncol(x)]
+  gamma <- B[(1+ncol(x)):(ncol(x)+ncol(w))]
+
+
+  ## Compute GMM objective
+  E <- Y - X %*% B
+  g <- drop(E)*Z
+  G <- colMeans(g)
+  obj <- nrow(g)*t(G) %*% W %*% G
+  return(list(obj=obj, beta=beta, gamma=gamma))
+}
+
+
+## Draw simulated v, y
+## From IPUMS-CPS average log (income in thousands of 1983 $) = 3.082,
+## with little variation across years, sd=0.840
+
+S <- 100
+T <- length(unique(BLP$cdid))
+K <- 5
+if (!require(randtoolbox)) install.packages("randtoolbox")
+library(randtoolbox)
+e <- halton(S*T,dim=K+1,init=TRUE,normal=TRUE)
+y.s <- matrix(exp(e[,K+1]*0.840 + 3.082),nrow=T,ncol=S)
+v.s <- array(e[,1:K], dim=c(T,S,K))
+
+## Estimates from Table IV of BLP
+est.blp <- list(alpha=43.501, sigma=c(3.612, 4.628, 1.818, 1.050,
+                                      2.056),
+                beta=c(-7.061, 2.883, 1.521, -0.122, 3.460),
+                gamma=c(0.952, 0.477, 0.619, -.415, -.049, .019))
+est.data <- list(x=as.matrix(cbind(1,BLP[,c("hpwt","air","mpd","space")])),
+                 w=as.matrix(cbind(1,log(BLP$hpwt), BLP$air, log(BLP$mpg),
+                                   log(BLP$space), BLP$trend)))
+est.data$zd <- as.matrix(Z)
+est.data$zs <- as.matrix(Wiv)
+est.data$log.yp <- list()
+x0 <- 0.001 ## take linear taylor approx to log around x0 for y-p<x0 to
+logx0 <- log(x0)
+slope <- 1/x0
+## avoid log(-)
+my.log <- function(x)  ifelse(x>=x0, log(x), logx0 + slope*(x-x0))
+dmy.log <- function(x) ifelse(x>=x0, 1/x, slope)
+est.data$log.y <- my.log(y.s)
+for (t in 1:T) {
+  yp <- outer(drop(y.s[t,]), BLP$price[BLP$cdid==t],
+              function(x,y) x-y)
+  est.data$log.yp[[t]] <- my.log(yp)
+  est.data$dlog.yp[[t]] <- dmy.log(yp)
+}
+
+
+
+
+
+Rprof("blp.prof", line.profiling=TRUE) # start the profiler
+q <- moments(est.blp$alpha, est.blp$sigma, s= BLP$share, p=BLP$price,
+             x= est.data$x, log.y= est.data$log.y,
+             log.yp= est.data$log.yp, dlog.yp= est.data$dlog.yp,
+             v= v.s, w= est.data$w, zd= est.data$zd, zs= est.data$zs,
+             W="3SLS", market.id= BLP$cdid, firm.id= BLP$firm.id, 
+             model.id= BLP$model.id)
+Rprof(NULL)  #stop the profiler
+
+summaryRprof("blp.prof", lines="both") # show the results
+
+
+
+
+
+
+## Test delta.fn
+t <- 20
+inc <- BLP$cdid==t
+delta <- rnorm(n=length(BLP$price[inc]), mean=1,sd=0.1)
+s <- share.fn(delta, x=drop(est.data$x[inc,]),
+              log.y=drop(est.data$log.y[t,]),
+              log.yp=est.data$log.yp[[t]],
+              v=drop(v.s[t,,]),
+              alpha=est.blp$alpha,
+              sigma=est.blp$sigma)
+d.check <- delta.fn(s, x=drop(est.data$x[inc,]),
+                    log.y=drop(est.data$log.y[t,]),
+                    log.yp=est.data$log.yp[[t]],
+                    v=drop(v.s[t,,]),
+                    alpha=est.blp$alpha,
+                    sigma=est.blp$sigma, max.iter=1000)
+summary((abs(delta-d.check)))
+
+
+## Test dshare.dp
+if (!require(numDeriv)) install.packages("numDeriv")
+library(numDeriv)
+dshare.num <- jacobian(function(p) {
+  share.fn(delta, x=drop(est.data$x[inc,]),
+           log.y=drop(est.data$log.y[t,]),
+           log.yp=est.data$log.yp[[t]],
+           v=drop(v.s[t,,]),
+           alpha=est.blp$alpha,
+           sigma=est.blp$sigma)
+}, x=BLP$price[inc])
+dshare <- dshare.dp(delta, x=drop(est.data$x[inc,]),
+           log.y=drop(est.data$log.y[t,]),
+           log.yp=est.data$log.yp[[t]],
+           dlog.yp=est.data$dlog.yp[[t]] ,
+           v=drop(v.s[t,,]),
+           alpha=est.blp$alpha,
+           sigma=est.blp$sigma)
+summary(as.vector(dshare-dshare.num))
+
+
+## Check demand side moments on simulated data
+fake.s <- NA*BLP$share
+xb <- est.data$x %*% est.blp$beta
+for (t in unique(BLP$cdid)) {
+  inc <- BLP$cdid==t
+  delta <- xb[inc] + rnorm(n=length(BLP$price[inc]), mean=0,sd=1)
+  s <- share.fn(delta, x=drop(est.data$x[inc,]),
+                log.y=drop(est.data$log.y[t,]),
+                log.yp=est.data$log.yp[[t]],
+                v=drop(v.s[t,,]),
+                alpha=10,
+                sigma=est.blp$sigma)
+  fake.s[inc] <- s
+}
+q <- moments(10, est.blp$sigma, s= fake.s, p=BLP$price,
+             x= est.data$x, log.y= est.data$log.y,
+             log.yp= est.data$log.yp,
+             dlog.yp= est.data$dlog.yp,
+             v= v.s, w= est.data$w, zd= est.data$zd, zs=est.data$zs,
+             W="ZZ",
+             market.id= BLP$cdid, firm.id= BLP$firm.id, model.id=BLP$model.id,
+             supply.side=FALSE)
+print(q) ## should have obj near 0, beta =  est.blp$beta gamma=0
+
+
+
+
+
+library(nloptr)
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+              eval_f=function(x) {
+                alpha <- x[1]
+                sigma <- x[2:length(x)]
+                q <- moments(alpha,sigma,
+                        s=BLP$share,p=BLP$price,
+                        x=est.data$x, log.y=est.data$log.y,
+                        log.yp=est.data$log.yp,
+                        dlog.yp=est.data$dlog.yp,
+                        v=v.s,w=est.data$w,zd=est.data$zd,zs=est.data$zs,
+                        W="ZZ",
+                        market.id=BLP$cdid, firm.id=BLP$firm.id, model.id=BLP$model.id)
+                return(q$obj)
+              }, lb=rep(0.01,1+length(est.blp$sigma)),
+              opts=list(algorithm="NLOPT_LN_BOBYQA",
+                        print_level=3, maxeval=100000)
+              )
+alpha <- res$solution[1]
+sigma <- res$solution[2:length(res$solution)]
+q <- moments(alpha,sigma,s=BLP$share,p=BLP$price,
+             x=est.data$x, log.y=est.data$log.y,
+             log.yp=est.data$log.yp,
+             dlog.yp=est.data$dlog.yp,
+             v=v.s,w=est.data$w,zd=est.data$zd,zs=est.data$zs,
+             W=diag(1,nrow=(ncol(est.data$zd)+ncol(est.data$zs))),
+             market.id=BLP$cdid, firm.id=BLP$firm.id, model.id=BLP$model.id)
+print(q)
+
+
+
+
+library(cmaes)
+obj.fn <- function(x) {
+  stopifnot(length(x)==6)
+  alpha <- x[1]
+  sigma <- x[2:length(x)]
+  q <- moments(alpha,sigma,
+               s=BLP$share,p=BLP$price,
+               x=est.data$x, log.y=est.data$log.y,
+               log.yp=est.data$log.yp,
+               dlog.yp=est.data$dlog.yp,
+               v=v.s,w=est.data$w,zd=est.data$zd,zs=est.data$zs,
+                                 W="ZZ",
+               market.id=BLP$cdid, firm.id=BLP$firm.id, model.id=BLP$model.id)
+  return(q$obj)
+}
+
+library(parallel)
+
+cl <- makeCluster(getOption("cl.cores", 4), type="FORK")
+
+obj.fn.vec <- function(x) {
+  v <- parApply(cl,x,2,obj.fn)
+  return(as.vector(v))
+}
+
+cma.res <- cma_es(c(est.blp$alpha, est.blp$sigma),
+                  fn=obj.fn.vec,
+                  lower=rep(0.01,1+length(est.blp$sigma)),
+                  control=list(keep.best=TRUE, diag.sigma=TRUE, diag.eigen=TRUE,
+                               diag.pop=TRUE, diag.value=TRUE, vectorized=TRUE))
+alpha <- cma.res$par[1]
+sigma <- cma.res$par[2:length(res$solution)]
+q <- moments(alpha,sigma,s=BLP$share,p=BLP$price,
+             x=est.data$x, log.y=est.data$log.y,
+             log.yp=est.data$log.yp,
+             dlog.yp=est.data$dlog.yp,
+             v=v.s,w=est.data$w,zd=est.data$zd,zs=est.data$zs,
+             W="ZZ",
+             market.id=BLP$cdid, firm.id=BLP$firm.id, model.id=BLP$model.id)
+stopCluster(cl)
+
+```
+
+
+
+
