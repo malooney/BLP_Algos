@@ -167,34 +167,34 @@ moments <- function(alpha,
   X <- as.matrix(rbind(cbind(x,0*w), cbind(0*x,w)))
   Y <- c(delta, omega)
   Z <- as.matrix(rbind(cbind(zd,0*zs), cbind(0*zd, zs)))
-  W.in <- W
+  #W.in <- W
   
-  if (W=="ZZ" | W=="3SLS") {
-    W <- solve(t(Z) %*% Z)
-    } else if (is.null(W))
-    { W <- diag(1, nrow=ncol(Z), ncol=ncol(Z))
-      }
-  B <- solve(t(X) %*% Z %*%  W %*% t(Z) %*% X , t(X) %*% Z %*% W %*% t(Z) %*% Y)
-  
-  if (W.in=="3SLS") {  ## 3SLS with heteroskedasticity
-    E <- Y - X %*% B
-    g <- drop(E)*Z
-    #V <- crossprod(g)/(nrow(g)/2 - ncol(g))
-
-    ## clustering on model id
-    tmp <- data.frame(id=model.id)
-    tmp <- rbind(tmp,tmp)
-    u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE), data=tmp)
-    u <- as.matrix(u[,colnames(u) != "id"])
-    V <- crossprod(u)/ (length(unique(model.id))- ncol(u))
-
-    #print((length(unique(market.id))-ncol(u)))
-    W <- ginv(V)
-    #print(V)
-    #print(W)
-    B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*% 
-      (t(X) %*% Z %*% W %*% t(Z) %*% Y)
-    }
+   if (W=="ZZ" | W=="3SLS") {
+     W <- solve(t(Z) %*% Z)
+     } else if (is.null(W))
+     { W <- diag(1, nrow=ncol(Z), ncol=ncol(Z))
+       }
+   B <- solve(t(X) %*% Z %*%  W %*% t(Z) %*% X , t(X) %*% Z %*% W %*% t(Z) %*% Y)
+   
+  # if (W.in=="3SLS") {  ## 3SLS with heteroskedasticity
+  #   E <- Y - X %*% B
+  #   g <- drop(E)*Z
+  #   #V <- crossprod(g)/(nrow(g)/2 - ncol(g))
+  # 
+  #   ## clustering on model id
+  #   tmp <- data.frame(id=model.id)
+  #   tmp <- rbind(tmp,tmp)
+  #   u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE), data=tmp)
+  #   u <- as.matrix(u[,colnames(u) != "id"])
+  #   V <- crossprod(u)/ (length(unique(model.id))- ncol(u))
+  # 
+  #   #print((length(unique(market.id))-ncol(u)))
+  #   W <- ginv(V)
+  #   #print(V)
+  #   #print(W)
+  #   B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*% 
+  #     (t(X) %*% Z %*% W %*% t(Z) %*% Y)
+  #   }
   
   beta <- B[1:ncol(x)]
   gamma <- B[(1+ncol(x)):(ncol(x)+ ncol(w))]
@@ -219,12 +219,12 @@ moments <- function(alpha,
 S <- 100
 T <- length(unique(BLP$cdid))
 K <- 5
-e <- halton(S* T, dim=K+1, init=TRUE, normal=TRUE)
-y.s <- matrix(exp(e[,K+1]*0.840 + 3.082), nrow=T,ncol=S)
+e <- halton(S* T, dim= K+1, init= TRUE, normal= T)
+y.s <- matrix(exp(e[,K+1]*0.840 + 3.082), nrow= T,ncol= S)
 v.s <- array(e[,1:K], dim=c(T,S,K))
 
-#y.s <- matrix(exp(rnorm(S*T,mean=3.082, sd=0.840)),nrow=T,ncol=S)
-#v.s <- array(rnorm(S*T*K, mean=0,sd=1), dim=c(T,S,K))
+y.s <- matrix(exp(rnorm(S*T,mean=3.082, sd=0.840)),nrow=T,ncol=S)
+v.s <- array(rnorm(S*T*K, mean=0,sd=1), dim=c(T,S,K))
 
 ## Estimates from Table IV of BLP
 est.blp <- list(alpha=43.501, sigma=c(3.612, 4.628, 1.818, 1.050, 2.056),
@@ -233,9 +233,9 @@ est.blp <- list(alpha=43.501, sigma=c(3.612, 4.628, 1.818, 1.050, 2.056),
 #est.blp <- list(alpha=1, sigma=c(1, 2, 1, 2, 1),
 #                beta=c(1, 2, 1, 2, 1),
 #                gamma=c(1, 2, 1, 2, 1, 2))
-est.data <- list(x=as.matrix(cbind(1,BLP[,c("hpwt","air","mpd","space")])),
-                 w=as.matrix(cbind(1,log(BLP$hpwt), BLP$air, log(BLP$mpg),
-                                   log(BLP$space), BLP$trend)))
+est.data <- list(x= as.matrix(cbind(1, BLP[,c("hpwt", "air", "mpd", "space")])),
+                 w= as.matrix(cbind(1, log(BLP$hpwt), BLP$air, log(BLP$mpg), 
+                                    log(BLP$space), BLP$trend)))
 est.data$zd <- as.matrix(Z)
 est.data$zs <- as.matrix(Wiv)
 est.data$log.yp <- list()
@@ -261,7 +261,7 @@ for (t in seq_len(T)) {
 ```{r run GMM Optimization, echo=FALSE}
 
 res <- nloptr(c(est.blp$alpha, est.blp$sigma),
-              eval_f=function(x) {
+              eval_f= function(x) {
                 alpha <- x[1]
                 sigma <- x[2:length(x)]
                 
@@ -277,16 +277,16 @@ res <- nloptr(c(est.blp$alpha, est.blp$sigma),
                              w= est.data$w, 
                              zd= est.data$zd, 
                              zs= est.data$zs, 
-                             W="ZZ", 
+                             W= "ZZ", 
                              market.id= BLP$cdid, 
                              firm.id= BLP$firm.id, 
                              model.id= BLP$model.id)
                 
                 return(q$obj)
-                #return(q)
-              }, lb= rep(0.001, 1+length(est.blp$sigma)),
+                
+              }, lb= rep(0.01, 1+length(est.blp$sigma)),
               opts= list(algorithm= "NLOPT_LN_BOBYQA",
-                        print_level= 0, maxeval=100000)
+                        print_level= 3, maxeval=100000)
               )
 
 alpha <- res$solution[1]
@@ -307,7 +307,7 @@ q <- moments(alpha,
              firm.id= BLP$firm.id, 
              model.id= BLP$model.id,
              W= diag(1, nrow=(ncol(est.data$zd)+ncol(est.data$zs)))
-             )
+             ) # returns beta and gamma paramaters
 q$alpha <- alpha
 q$sigma <- sigma
 print(q)
