@@ -91,23 +91,28 @@ share.fn <- function(delta,
                      v, 
                      alpha, 
                      sigma)
-{
-  ls <- matrix(delta,nrow=length(log.y),ncol=length(delta),
-               byrow=TRUE) +
-    alpha*log.yp + t(x %*% (t(v)*sigma))
+  {
+  ls <- matrix(delta, nrow= length(log.y), ncol= length(delta), byrow=TRUE) + 
+    alpha* log.yp + t(x %*% (t(v)* sigma))
   els <- exp(ls)
-  s <- els/(exp(alpha*log.y)+rowSums(els))
+  s <- els/ (exp(alpha*log.y)+ rowSums(els))
   share <- colMeans(s)
-  return(share)
-}
+  return(share) 
+  }
+
+
+
+
+
 
 library(Rcpp)
 # Problem with C++ code?????
 cppFunction("
-NumericVector share.fn.c(NumericVector delta,
+NumericVector share_fn_c(NumericVector delta,
                          NumericMatrix x,
                          NumericVector logy,
                          NumericMatrix logyp,
+                         NumericMatrix v,
                          double alpha,
                          NumericVector sigma)
 {
@@ -133,6 +138,9 @@ NumericVector share.fn.c(NumericVector delta,
 ")
 
 
+
+
+
 dshare.dp <- function(delta, 
                       x, 
                       log.y, 
@@ -151,6 +159,10 @@ dshare.dp <- function(delta,
   dshare <- -t(s) %*% (s*dlsj) / nrow(s) + diag(colMeans(s*dlsj))
   return(dshare)
 }
+
+
+
+
 
 if (!require(SQUAREM)) install.packages("SQUAREM")
 library(SQUAREM)
@@ -175,9 +187,21 @@ delta.fn.sem <- function(s,
   return(out$par)
 }
 
-delta.fn <- function(s,x,log.y,log.yp,v,alpha,sigma,
-                     tol=1e-6, tol.s=1e-8,
-                     max.iter=500)
+
+
+
+
+
+delta.fn <- function(s, 
+                     x, 
+                     log.y, 
+                     log.yp, 
+                     v, 
+                     alpha, 
+                     sigma,
+                     tol=1e-6, 
+                     tol.s=1e-8,
+                     max.iter=5000)
 {
   delta.new <- log(s) - log(1-sum(s)) #+ alpha*colMeans(log.yp)
   dd <- 1
@@ -185,8 +209,8 @@ delta.fn <- function(s,x,log.y,log.yp,v,alpha,sigma,
   iter <- 0
   while ((dd>tol) & (ds>tol.s)) {
     delta.old <- delta.new
-    sm <- share.fn(delta.old, x, log.y, log.yp, v, alpha,sigma)
-    delta.new <- ifelse(sm>0,delta.old + log(s) - log(sm),
+    sm <- share.fn(delta.old, x, log.y, log.yp, v, alpha, sigma)
+    delta.new <- ifelse(sm>0, delta.old + log(s) - log(sm),
                         delta.old+log(s)-min(log(sm[sm>0])))
     dd <- max(abs(delta.old - delta.new))
     ds <- max(abs(s - sm))
@@ -206,6 +230,9 @@ delta.fn <- function(s,x,log.y,log.yp,v,alpha,sigma,
 }
 
 
+
+
+
 moments <- function(alpha, 
                     sigma, 
                     s, 
@@ -223,7 +250,7 @@ moments <- function(alpha,
                     firm.id, 
                     model.id=NULL, 
                     delta.tol=1e-10,
-                    max.iter=500, 
+                    max.iter=5000, 
                     supply.side=TRUE)
 {
   ## Find delta and omega
@@ -232,7 +259,7 @@ moments <- function(alpha,
   for (t in unique(market.id)) {
     #cat(t,"\n")
     inc <- market.id==t
-    delta[inc] <- delta.fn(s[inc], x[inc,],drop(log.y[t,]),
+    delta[inc] <- delta.fn.sem(s[inc], x[inc,],drop(log.y[t,]),
                                log.yp[[t]] ,
                                v=drop(v[t,,]),
                                alpha,sigma, tol=delta.tol,
@@ -335,7 +362,6 @@ for (t in 1:T) {
 
 
 
-
 Rprof("blp.prof", line.profiling=TRUE) # start the profiler
 q <- moments(est.blp$alpha, est.blp$sigma, s= BLP$share, p=BLP$price,
              x= est.data$x, log.y= est.data$log.y,
@@ -344,8 +370,8 @@ q <- moments(est.blp$alpha, est.blp$sigma, s= BLP$share, p=BLP$price,
              W="3SLS", market.id= BLP$cdid, firm.id= BLP$firm.id, 
              model.id= BLP$model.id)
 Rprof(NULL)  #stop the profiler
-
-summaryRprof("blp.prof", lines="both") # show the results
+#summaryRprof("blp.prof", lines="both") # show the results
+summaryRprof("blp.prof") # show the results
 
 
 
@@ -369,6 +395,9 @@ d.check <- delta.fn(s, x=drop(est.data$x[inc,]),
                     alpha=est.blp$alpha,
                     sigma=est.blp$sigma, max.iter=1000)
 summary((abs(delta-d.check)))
+
+
+
 
 
 ## Test dshare.dp
