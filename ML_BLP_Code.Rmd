@@ -112,8 +112,8 @@ delta.fn.sem <- function(s,
 {
   fixptfn <- function(delta.old) {
     sm <- share.fn(delta.old, x, log.y, log.yp, v, alpha,sigma)
-    delta.new <- ifelse(sm>0,delta.old + log(s) - log(sm),
-                        delta.old+log(s)-min(log(sm[sm>0])))
+    delta.new <- ifelse(sm > 0, delta.old + log(s) - log(sm),
+                        delta.old+ log(s)- min(log(sm[sm>0])))
   }
   delta.new <- log(s) - log(1-sum(s)) #+ alpha*colMeans(log.yp)
   out <- squarem(delta.new, fixptfn)
@@ -149,35 +149,33 @@ moments <- function(alpha,
   for (t in unique(market.id)) {
     #cat(t,"\n")
     inc <- market.id==t
-    delta[inc] <- delta.fn.sem(s[inc], x[inc,],drop(log.y[t,]),
-                               log.yp[[t]] ,
-                               v= drop(v[t,,]),
-                               alpha, sigma, tol= delta.tol,
+    delta[inc] <- delta.fn.sem(s[inc], x[inc,], drop(log.y[t,]), log.yp[[t]],
+                               v= drop(v[t,,]), alpha, sigma, tol= delta.tol,
                                tol.s= 1e-6, max.iter= max.iter)
     if (supply.side) {
-      dShare <- dshare.dp(delta[inc], x[inc,], drop(log.y[t,]),
-                          log.yp[[t]], dlog.yp[[t]] , drop(v[t,,]), alpha,sigma)
-      dShare <- dShare* outer(firm.id[inc],firm.id[inc],
-                              function(x,y) x==y)
+      dShare <- dshare.dp(delta[inc], x[inc,], drop(log.y[t,]), log.yp[[t]], 
+                          dlog.yp[[t]] , drop(v[t,,]), alpha,sigma)
+      dShare <- dShare* outer(firm.id[inc],firm.id[inc], function(x,y) x==y)
       b <- solve(dShare) %*% s[inc]
-      omega[inc] <- log(p[inc]-b)
-    } else {
-      omega[inc] <- 0
+      omega[inc] <- log(p[inc]- b)
+      } else {
+        omega[inc] <- 0
+      }
     }
-  }
 
   ## Solve for beta and gamma
   X <- as.matrix(rbind(cbind(x,0*w), cbind(0*x,w)))
   Y <- c(delta, omega)
   Z <- as.matrix(rbind(cbind(zd,0*zs), cbind(0*zd, zs)))
   W.in <- W
+  
   if (W=="ZZ" | W=="3SLS") {
     W <- solve(t(Z) %*% Z)
-  } else if (is.null(W)) {
-    W <- diag(1,nrow=ncol(Z),ncol=ncol(Z))
-  }
-  B <- solve(t(X) %*% Z %*%  W %*% t(Z) %*% X ,
-             t(X) %*% Z %*% W %*% t(Z) %*% Y)
+    } else if (is.null(W))
+    { W <- diag(1, nrow=ncol(Z), ncol=ncol(Z))
+      }
+  B <- solve(t(X) %*% Z %*%  W %*% t(Z) %*% X , t(X) %*% Z %*% W %*% t(Z) %*% Y)
+  
   if (W.in=="3SLS") {  ## 3SLS with heteroskedasticity
     E <- Y - X %*% B
     g <- drop(E)*Z
@@ -186,18 +184,18 @@ moments <- function(alpha,
     ## clustering on model id
     tmp <- data.frame(id=model.id)
     tmp <- rbind(tmp,tmp)
-    u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE),
-                   data=tmp)
+    u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE), data=tmp)
     u <- as.matrix(u[,colnames(u) != "id"])
-    V <- crossprod(u)/(length(unique(model.id))-ncol(u))
+    V <- crossprod(u)/ (length(unique(model.id))- ncol(u))
 
     #print((length(unique(market.id))-ncol(u)))
     W <- ginv(V)
     #print(V)
     #print(W)
-    B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*%
+    B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*% 
       (t(X) %*% Z %*% W %*% t(Z) %*% Y)
-  }
+    }
+  
   beta <- B[1:ncol(x)]
   gamma <- B[(1+ncol(x)):(ncol(x)+ ncol(w))]
 
@@ -222,16 +220,19 @@ S <- 100
 T <- length(unique(BLP$cdid))
 K <- 5
 e <- halton(S* T, dim=K+1, init=TRUE, normal=TRUE)
-y.s <- matrix(exp(e[,K+1]*0.840 + 3.082),nrow=T,ncol=S)
+y.s <- matrix(exp(e[,K+1]*0.840 + 3.082), nrow=T,ncol=S)
 v.s <- array(e[,1:K], dim=c(T,S,K))
 
 #y.s <- matrix(exp(rnorm(S*T,mean=3.082, sd=0.840)),nrow=T,ncol=S)
 #v.s <- array(rnorm(S*T*K, mean=0,sd=1), dim=c(T,S,K))
 
 ## Estimates from Table IV of BLP
-est.blp <- list(alpha=5, sigma=c(1, 1, 1, 1, 1),
-                beta=c(2, 2, 2, 2, 2),
-                gamma=c(1, 1, 1, 1, 1, 1))
+est.blp <- list(alpha=43.501, sigma=c(3.612, 4.628, 1.818, 1.050, 2.056),
+                beta=c(-7.061, 2.883, 1.521, -0.122, 3.460),
+                gamma=c(0.952, 0.477, 0.619, -.415, -.049, .019))
+#est.blp <- list(alpha=1, sigma=c(1, 2, 1, 2, 1),
+#                beta=c(1, 2, 1, 2, 1),
+#                gamma=c(1, 2, 1, 2, 1, 2))
 est.data <- list(x=as.matrix(cbind(1,BLP[,c("hpwt","air","mpd","space")])),
                  w=as.matrix(cbind(1,log(BLP$hpwt), BLP$air, log(BLP$mpg),
                                    log(BLP$space), BLP$trend)))
@@ -283,7 +284,7 @@ res <- nloptr(c(est.blp$alpha, est.blp$sigma),
                 
                 return(q$obj)
                 #return(q)
-              }, lb= rep(0.01, 1+length(est.blp$sigma)),
+              }, lb= rep(0.001, 1+length(est.blp$sigma)),
               opts= list(algorithm= "NLOPT_LN_BOBYQA",
                         print_level= 0, maxeval=100000)
               )
