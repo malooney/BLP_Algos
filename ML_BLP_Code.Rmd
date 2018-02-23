@@ -106,8 +106,8 @@ delta.fn.sem <- function(s,
                          v, 
                          alpha, 
                          sigma, 
-                         tol=1e-6, 
-                         tol.s=1e-8, 
+                         tol=1e-12, 
+                         tol.s=1e-12, 
                          max.iter=500)
 {
   fixptfn <- function(delta.old) {
@@ -139,7 +139,7 @@ moments <- function(alpha,
                     market.id, 
                     firm.id, 
                     model.id=NULL, 
-                    delta.tol=1e-10,
+                    delta.tol=1e-12,
                     max.iter=5000, 
                     supply.side=TRUE)
 {
@@ -151,7 +151,7 @@ moments <- function(alpha,
     inc <- market.id==t
     delta[inc] <- delta.fn.sem(s[inc], x[inc,], drop(log.y[t,]), log.yp[[t]],
                                v= drop(v[t,,]), alpha, sigma, tol= delta.tol,
-                               tol.s= 1e-6, max.iter= max.iter)
+                               tol.s= 1e-12, max.iter= max.iter)
     if (supply.side) {
       dShare <- dshare.dp(delta[inc], x[inc,], drop(log.y[t,]), log.yp[[t]], 
                           dlog.yp[[t]] , drop(v[t,,]), alpha,sigma)
