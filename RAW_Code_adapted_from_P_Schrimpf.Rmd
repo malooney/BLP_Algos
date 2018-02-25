@@ -30,7 +30,7 @@ BLP$cdid <- BLP$cdid- min(BLP$cdid)+1
 
 # estimates from Table 3 of BLP paper, column 1
 library(lfe)
-summary(lm(log(share)-log(outshr) ~ hpwt + air + mpd + space + price,
+summary(lm(log(share)-log(`BLP$outshr`) ~ hpwt + air + mpd + space + price,
            data=BLP))
 
 
@@ -54,8 +54,8 @@ stopifnot(ncol(Wiv)==19 & ncol(Z)==15) ## numbers of instruments in BLP 1995
 iv.logit <- felm(y ~ hpwt + air + mpd + space | 1 |
                    (price ~ sum.other.hpwt +sum.other.air + sum.other.mpd
                      + sum.other.space + sum.other.1
-                     + sum.rival.hpwt +sum.rival.air + sum.rival.mpd
-                     + sum.rival.space + sum.rival.1
+                     #+ sum.rival.hpwt +sum.rival.air + sum.rival.mpd
+                     #+ sum.rival.space + sum.rival.1
                      #+ log(mpg) + trend
                      #+ sum.other.log.mpg + sum.rival.log.mpg
                      #+ sum.other.log.hpwt + sum.rival.log.hpwt
@@ -65,20 +65,22 @@ iv.logit <- felm(y ~ hpwt + air + mpd + space | 1 |
 
 library(AER)
 
-summary(ivreg(y ~ hpwt + air + mpd + space + price |
-                hpwt+ air + mpd + space + sum.other.hpwt +
-                sum.other.air + sum.other.mpd
-              + sum.other.space + sum.other.1
-              + sum.rival.hpwt +sum.rival.air + sum.rival.mpd
-              + sum.rival.space + sum.rival.1
-              #+ log(mpg) + trend
-              #+ sum.other.log.mpg + sum.rival.log.mpg
+summary(ivreg( log(share)-log(`BLP$outshr`)  ~ hpwt + air + mpd + space + price |
+                log(hpwt) + air + (mpd) + log(space) + log(price) + trend + log(mpg)
+               #sum.other.hpwt + sum.other.air  #sum.other.mpd
+              #+ sum.other.space
+              #+ price+ sum.rival.mpd# + sum.other.1
+              #+ sum.rival.hpwt +sum.rival.air + sum.rival.mpd
+              #+ sum.rival.space# + sum.rival.1
+              #+ sum.other.log.mpg 
+              #+ sum.rival.log.mpg
               #+ sum.other.log.hpwt + sum.rival.log.hpwt
               #+ sum.other.log.space + sum.rival.log.space
              ,
               data=BLP))
 
 summary(iv.logit)
+# fisrt stage of 2sls regression
 summary(lm(log(price) ~ log(hpwt) + air + log(mpg) + log(space) +
              trend, data=BLP))
 

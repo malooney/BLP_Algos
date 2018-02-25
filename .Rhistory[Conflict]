@@ -1,0 +1,512 @@
+#   u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE), data=tmp)
+#   u <- as.matrix(u[,colnames(u) != "id"])
+#   V <- crossprod(u)/ (length(unique(model.id))- ncol(u))
+#
+#   #print((length(unique(market.id))-ncol(u)))
+#   W <- ginv(V)
+#   #print(V)
+#   #print(W)
+#   B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*%
+#     (t(X) %*% Z %*% W %*% t(Z) %*% Y)
+#   }
+beta <- B[1:ncol(x)]
+gamma <- B[(1+ncol(x)):(ncol(x)+ ncol(w))]
+## Compute GMM objective
+E <- Y - X %*% B
+g <- drop(E)*Z
+G <- colMeans(g)
+obj <- nrow(g)*t(G) %*% W %*% G
+return(list(obj=obj, beta=beta, gamma=gamma))
+}
+## Draw simulated v, y
+## From IPUMS-CPS average log (income in thousands of 1983 $) = 3.082,
+## with little variation across years, sd=0.840
+S <- 100
+T <- length(unique(BLP$cdid))
+K <- 5
+e <- halton(S* T, dim= K+1, init= TRUE, normal= T)
+y.s <- matrix(exp(e[,K+1]*0.840 + 3.082), nrow= T,ncol= S)
+v.s <- array(e[,1:K], dim=c(T,S,K))
+#set.seed(41658)
+#y.s <- matrix(exp(rnorm(S*T,mean=3.082, sd=0.840)),nrow=T,ncol=S)
+#y.s <- matrix(rlnorm(S*T, 3.082, .840),nrow=T,ncol=S)
+#v.s <- array(rnorm(S*T*K, mean=0,sd=1), dim=c(T,S,K))
+## Estimates from Table IV of BLP
+est.blp <- list(alpha=43.501, sigma=c(3.612, 4.628, 1.818, 1.050, 2.056),
+beta=c(-7.061, 2.883, 1.521, -0.122, 3.460),
+gamma=c(0.952, 0.477, 0.619, -.415, -.049, .019))
+#est.blp <- list(alpha=1, sigma=c(1, 2, 1, 2, 1),
+#                beta=c(1, 2, 1, 2, 1),
+#                gamma=c(1, 2, 1, 2, 1, 2))
+est.data <- list(x= as.matrix(cbind(1, BLP[,c("hpwt", "air", "mpd", "space")])),
+w= as.matrix(cbind(1, log(BLP$hpwt), BLP$air, log(BLP$mpg),
+log(BLP$space), BLP$trend)))
+est.data$zd <- as.matrix(Z)
+est.data$zs <- as.matrix(Wiv)
+est.data$log.yp <- list()
+x0 <- 0.001 ## take linear taylor approx to log around x0 for y-p<x0 to
+logx0 <- log(x0)
+slope <- 1/x0
+## avoid log(-)
+my.log <- function(x) ifelse(x >= x0, log(x), logx0 + slope*(x-x0))
+dmy.log <- function(x) ifelse(x>=x0, 1/x, slope)
+est.data$log.y <- my.log(y.s)
+for (t in seq_len(T)) {
+yp <- outer(drop(y.s[t, ]), BLP$price[BLP$cdid== t], function(x, y) x- y)
+est.data$log.yp[[t]] <- my.log(yp)
+est.data$dlog.yp[[t]] <- dmy.log(yp)
+}
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+eval_f= function(x) {
+alpha <- x[1]
+sigma <- x[2:length(x)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p= BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+W= "ZZ",
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id)
+return(q$obj)
+}, lb= rep(0.0011, 1+length(est.blp$sigma)),
+opts= list(algorithm= "NLOPT_LN_BOBYQA",
+print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+)
+alpha <- res$solution[1]
+sigma <- res$solution[2:length(res$solution)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p=BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id,
+W= diag(1, nrow=(ncol(est.data$zd)+ncol(est.data$zs)))
+) # returns beta and gamma paramaters
+q$alpha <- alpha
+q$sigma <- sigma
+print(q)
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+# eval_f= function(x) {
+#   alpha <- x[1]
+#   sigma <- x[2:length(x)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p= BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+W= "ZZ",
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id),
+#return(q$obj)
+#},
+lb= rep(0.0011, 1+length(est.blp$sigma)),
+opts= list(algorithm= "NLOPT_LN_BOBYQA",
+print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+)
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+eval_f= function(x) {
+alpha <- x[1]
+sigma <- x[2:length(x)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p= BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+W= "ZZ",
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id)
+return(q$obj)
+},
+lb= rep(0.0011, 1+length(est.blp$sigma)),
+opts= list(algorithm= "NLOPT_LN_BOBYQA"))#,
+#                        print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+#              )
+alpha <- res$solution[1]
+sigma <- res$solution[2:length(res$solution)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p=BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id,
+W= diag(1, nrow=(ncol(est.data$zd)+ncol(est.data$zs)))
+) # returns beta and gamma paramaters
+q$alpha <- alpha
+q$sigma <- sigma
+print(q)
+?nloptr
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+eval_f= function(x) {
+alpha <- x[1]
+sigma <- x[2:length(x)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p= BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+W= "ZZ",
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id)
+return(q$obj)
+},
+lb= rep(0.0011, 1+length(est.blp$sigma)),
+opts= list(algorithm= "NLOPT_LN_COBYLA"))#,
+#                        print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+#              )
+alpha <- res$solution[1]
+sigma <- res$solution[2:length(res$solution)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p=BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id,
+W= diag(1, nrow=(ncol(est.data$zd)+ncol(est.data$zs)))
+) # returns beta and gamma paramaters
+q$alpha <- alpha
+q$sigma <- sigma
+print(q)
+res
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+eval_f= function(x) {
+alpha <- x[1]
+sigma <- x[2:length(x)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p= BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+W= "ZZ",
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id)
+return(q$obj)
+},
+lb= rep(0.0011, 1+length(est.blp$sigma)),
+opts= list(algorithm= "NLOPT_LN_COBYLA",
+print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+)
+alpha <- res$solution[1]
+sigma <- res$solution[2:length(res$solution)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p=BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id,
+W= diag(1, nrow=(ncol(est.data$zd)+ncol(est.data$zs)))
+) # returns beta and gamma paramaters
+q$alpha <- alpha
+q$sigma <- sigma
+print(q)
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library(hdm) ## contains BLP data
+library(MASS)
+library(lfe)
+library(AER)
+library(nloptr)
+library(SQUAREM)
+library(randtoolbox)
+data(BLP)
+BLP <- BLP$BLP
+## Note: despite what the hdm package's documentation says, price is not
+## log price; it is price - mean(price). If you compare the quantiles
+## of price with Table II from BLP (1995), you see that everything is
+## shifted down by 11.761
+#tab2 <- c(3.393, 6.711, 8.728, 13.074, 68.597)
+#stopifnot(all(abs(quantile(BLP$price, c(0,0.25,0.5,0.75,1)) - tab2 + 11.761)< 0.005))
+BLP$price <- BLP$price + 11.761
+BLP$mpd <- BLP$mpd* 10
+BLP$mpg <- BLP$mpg* 10
+quantile(BLP$price, c(0,0.25,0.5,0.75,1))
+quantile(BLP$hpwt, c(0,0.25,0.5,0.75,1))
+quantile(BLP$space, c(0,0.25,0.5,0.75,1))
+quantile(BLP$mpd, c(0,0.25,0.5,0.75,1))
+quantile(BLP$mpg, c(0,0.25,0.5,0.75,1))
+#BLP <- subset(BLP,cdid >= 17) ## use small subset to make it faster
+#BLP$cdid <- BLP$cdid- min(BLP$cdid)+1
+## demand instruments
+Z <- hdm:::constructIV(BLP$firm.id, BLP$cdid, BLP$id,
+cbind(1, BLP[, c("hpwt", "air", "mpd", "space")]))
+BLP <- cbind(BLP,Z)
+Z <- cbind(1, BLP[, c("hpwt", "air", "mpd", "space")], Z)
+## supply instruments
+W <- log(BLP[,c("hpwt", "mpg", "space")])
+colnames(W) <- paste("log", colnames(W), sep=".")
+Wiv <- hdm:::constructIV(BLP$firm.id, BLP$cdid, BLP$id, W)
+BLP <- cbind(BLP, Wiv)
+W <- cbind(1, BLP[,c("air", "trend")], W)
+Wiv <- hdm:::constructIV(BLP$firm.id, BLP$cdid, BLP$id, W)
+Wiv <- cbind(W, Wiv,BLP[, "mpg"])
+share.fn <- function(delta,
+x,
+log.y,
+log.yp,
+v,
+alpha,
+sigma)
+{
+ls <- matrix(delta, nrow= length(log.y), ncol= length(delta), byrow=TRUE) +
+alpha* log.yp + t(x %*% (t(v)* sigma))
+els <- exp(ls)
+s <- els/ (exp(alpha*log.y)+ rowSums(els))
+share <- colMeans(s)
+return(share)
+}
+dshare.dp <- function(delta,
+x,
+log.y,
+log.yp,
+dlog.yp,
+v,
+alpha,
+sigma)
+{
+ls <- matrix(delta,nrow=length(log.y),ncol=length(delta),
+byrow=TRUE) +
+alpha*log.yp + t(x %*% (t(v)*sigma))
+dlsj <- -alpha*dlog.yp
+els <- exp(ls)
+s <- els/(exp(alpha*log.y)+rowSums(els))
+dshare <- -t(s) %*% (s*dlsj) / nrow(s) + diag(colMeans(s*dlsj))
+return(dshare)
+}
+delta.fn.sem <- function(s,
+x,
+log.y,
+log.yp,
+v,
+alpha,
+sigma,
+tol=1e-12,
+tol.s=1e-12,
+max.iter=500000)
+{
+fixptfn <- function(delta.old) {
+sm <- share.fn(delta.old, x, log.y, log.yp, v, alpha,sigma)
+delta.new <- ifelse(sm > 0, delta.old + log(s) - log(sm),
+delta.old+ log(s)- min(log(sm[sm>0])))
+}
+delta.new <- log(s) - log(1-sum(s)) #+ alpha*colMeans(log.yp)
+out <- squarem(delta.new, fixptfn)
+return(out$par)
+}
+moments <- function(alpha,
+sigma,
+s,
+p,
+x,
+log.yp,
+log.y,
+dlog.yp,
+v,
+w,
+zd,
+zs,
+W,
+market.id,
+firm.id,
+model.id=NULL,
+delta.tol=1e-12,
+max.iter=500000,
+supply.side=TRUE)
+{
+## Find delta and omega
+delta <- rep(NA, length(s))
+omega <- rep(NA, length(s))
+for (t in unique(market.id)) {
+#cat(t,"\n")
+inc <- market.id==t
+delta[inc] <- delta.fn.sem(s[inc], x[inc,], drop(log.y[t,]), log.yp[[t]],
+v= drop(v[t,,]), alpha, sigma, tol= delta.tol,
+tol.s= 1e-12, max.iter= max.iter)
+if (supply.side) {
+dShare <- dshare.dp(delta[inc], x[inc,], drop(log.y[t,]), log.yp[[t]],
+dlog.yp[[t]] , drop(v[t,,]), alpha,sigma)
+dShare <- dShare* outer(firm.id[inc],firm.id[inc], function(x,y) x==y)
+b <- solve(dShare) %*% s[inc]
+omega[inc] <- log(p[inc]- b)
+} else {
+omega[inc] <- 0
+}
+}
+## Solve for beta and gamma
+X <- as.matrix(rbind(cbind(x,0*w), cbind(0*x,w)))
+Y <- c(delta, omega)
+Z <- as.matrix(rbind(cbind(zd,0*zs), cbind(0*zd, zs)))
+#W.in <- W
+if (W=="ZZ" | W=="3SLS") {
+W <- solve(t(Z) %*% Z)
+} else if (is.null(W))
+{ W <- diag(1, nrow=ncol(Z), ncol=ncol(Z))
+}
+B <- solve(t(X) %*% Z %*%  W %*% t(Z) %*% X , t(X) %*% Z %*% W %*% t(Z) %*% Y)
+# if (W.in=="3SLS") {  ## 3SLS with heteroskedasticity
+#   E <- Y - X %*% B
+#   g <- drop(E)*Z
+#   #V <- crossprod(g)/(nrow(g)/2 - ncol(g))
+#
+#   ## clustering on model id
+#   tmp <- data.frame(id=model.id)
+#   tmp <- rbind(tmp,tmp)
+#   u <- aggregate(g ~ id, FUN=function(x) sum(x, na.rm=TRUE), data=tmp)
+#   u <- as.matrix(u[,colnames(u) != "id"])
+#   V <- crossprod(u)/ (length(unique(model.id))- ncol(u))
+#
+#   #print((length(unique(market.id))-ncol(u)))
+#   W <- ginv(V)
+#   #print(V)
+#   #print(W)
+#   B <- ginv(t(X) %*% Z %*%  W %*% t(Z) %*% X) %*%
+#     (t(X) %*% Z %*% W %*% t(Z) %*% Y)
+#   }
+beta <- B[1:ncol(x)]
+gamma <- B[(1+ncol(x)):(ncol(x)+ ncol(w))]
+## Compute GMM objective
+E <- Y - X %*% B
+g <- drop(E)*Z
+G <- colMeans(g)
+obj <- nrow(g)*t(G) %*% W %*% G
+return(list(obj=obj, beta=beta, gamma=gamma))
+}
+## Draw simulated v, y
+## From IPUMS-CPS average log (income in thousands of 1983 $) = 3.082,
+## with little variation across years, sd=0.840
+S <- 100
+T <- length(unique(BLP$cdid))
+K <- 5
+e <- halton(S* T, dim= K+1, init= TRUE, normal= T)
+y.s <- matrix(exp(e[,K+1]*0.840 + 3.082), nrow= T,ncol= S)
+v.s <- array(e[,1:K], dim=c(T,S,K))
+#set.seed(41658)
+#y.s <- matrix(exp(rnorm(S*T,mean=3.082, sd=0.840)),nrow=T,ncol=S)
+#y.s <- matrix(rlnorm(S*T, 3.082, .840),nrow=T,ncol=S)
+#v.s <- array(rnorm(S*T*K, mean=0,sd=1), dim=c(T,S,K))
+## Estimates from Table IV of BLP
+est.blp <- list(alpha=43.501, sigma=c(3.612, 4.628, 1.818, 1.050, 2.056),
+beta=c(-7.061, 2.883, 1.521, -0.122, 3.460),
+gamma=c(0.952, 0.477, 0.619, -.415, -.049, .019))
+#est.blp <- list(alpha=1, sigma=c(1, 2, 1, 2, 1),
+#                beta=c(1, 2, 1, 2, 1),
+#                gamma=c(1, 2, 1, 2, 1, 2))
+est.data <- list(x= as.matrix(cbind(1, BLP[,c("hpwt", "air", "mpd", "space")])),
+w= as.matrix(cbind(1, log(BLP$hpwt), BLP$air, log(BLP$mpg),
+log(BLP$space), BLP$trend)))
+est.data$zd <- as.matrix(Z)
+est.data$zs <- as.matrix(Wiv)
+est.data$log.yp <- list()
+x0 <- 0.001 ## take linear taylor approx to log around x0 for y-p<x0 to
+logx0 <- log(x0)
+slope <- 1/x0
+## avoid log(-)
+my.log <- function(x) ifelse(x >= x0, log(x), logx0 + slope*(x-x0))
+dmy.log <- function(x) ifelse(x>=x0, 1/x, slope)
+est.data$log.y <- my.log(y.s)
+for (t in seq_len(T)) {
+yp <- outer(drop(y.s[t, ]), BLP$price[BLP$cdid== t], function(x, y) x- y)
+est.data$log.yp[[t]] <- my.log(yp)
+est.data$dlog.yp[[t]] <- dmy.log(yp)
+}
+res <- nloptr(c(est.blp$alpha, est.blp$sigma),
+eval_f= function(x) {
+alpha <- x[1]
+sigma <- x[2:length(x)]
+q <- moments(alpha,
+sigma,
+s= BLP$share,
+p= BLP$price,
+x= est.data$x,
+log.y= est.data$log.y,
+log.yp= est.data$log.yp,
+dlog.yp= est.data$dlog.yp,
+v= v.s,
+w= est.data$w,
+zd= est.data$zd,
+zs= est.data$zs,
+W= "ZZ",
+market.id= BLP$cdid,
+firm.id= BLP$firm.id,
+model.id= BLP$model.id)
+return(q$obj)
+},
+lb= rep(0.01, 1+length(est.blp$sigma)),
+opts= list(algorithm= "NLOPT_LN_COBYLA",
+print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+)
