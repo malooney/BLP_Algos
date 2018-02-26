@@ -1,7 +1,7 @@
 
 
 
-BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.id", prc.fld = "px", share.fld = "share", x.var.flds = c("x1", "x2", "x3"), prc.iv.flds = "z", n.sim = 1500, sigma.guess){
+BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.id", prc.fld = "px", share.fld = "share", x.var.flds = c("x1", "x2", "x3"), prc.iv.flds = "z", n.sim = 200, sigma.guess){
   # all data should appear in the data.frame "dat"
   # input variables ending in ".fld" are the names of the columns
   # n.sim = number of simulated "indviduals" per market 
