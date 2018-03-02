@@ -10,7 +10,7 @@ load milkdata
 
 IV=[I pr PL]; %Instrumental Variables
 
-ns=20; % number of cps draw
+ns=200; % number of cps draw
 nmkt=58; % number of markets
 nbrn=6; % number of brands
 cdid=kron([1:nmkt]',ones(nbrn,1)); % gives the market id

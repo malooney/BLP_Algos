@@ -3,11 +3,17 @@
 
 
 rm(list=ls())
+
 library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
 
 dat <- BLP$BLP
 
 dat$price <- dat$price + 11.761
+
+#source("/home/malooney/blp_function.R")
 
 source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
 

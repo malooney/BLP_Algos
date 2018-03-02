@@ -161,7 +161,7 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   dat[, "delta"] <- Y <- log(s.jt) - log(s.j0);
   iv <- dat[, prc.iv.flds]
   
-  while(!require(AER)){install.packages("AER")}
+#  while(!require(AER)){install.packages("AER")}
   #Construct 2SLS regression specification
   str.ivreg.y <- "delta ~ "
   str.ivreg.x <- paste(x.var.flds, collapse = " + ")
@@ -221,8 +221,8 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   print("Estimating random coefficients multinomial logit")
   a <- 0;
   beta.est <- NULL;
-  while(!require(SQUAREM)){install.packages("SQUAREM")}
-  while(!require(BB)){install.packages("BB")}
+#  while(!require(SQUAREM)){install.packages("SQUAREM")}
+#  while(!require(BB)){install.packages("BB")}
   print(system.time(
     theta.est <- multiStart(par = theta2, fn = gmm_obj, gr = gradient_obj, lower = 0, control = list(trace = TRUE, checkGrad=FALSE), action = "optimize")
   ));
