@@ -2,6 +2,7 @@
 
 
 BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.id", prc.fld = "px", share.fld = "share", x.var.flds = c("x1", "x2", "x3"), prc.iv.flds = "z", n.sim = 200, sigma.guess){
+  
   # all data should appear in the data.frame "dat"
   # input variables ending in ".fld" are the names of the columns
   # n.sim = number of simulated "indviduals" per market 
@@ -10,8 +11,18 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   # Required packages (installed as the function runs):
   # SQUAREM, BB, AER
   #
-  # Based on code written by Aviv Nevo, May 1998.
-  # Adapted by Michael Carniol, January 2015
+  # Based on code written by B Chidmi, May 1998:
+  # Chidmi, B., & Murova, O. (2011). Measuring market power in the supermarket 
+  # industry: the case of the Seattle–Tacoma fluid milk market. Agribusiness, 27
+  # (4), 435–449.
+  #
+  # Based on code written by Aviv Nevo, May 1998:
+  # Nevo, A. (2000). A Practitioner's Guide to Estimation of Random‐Coefficients   # Logit Models of Demand. Journal of Economics & Management Strategy, 9(4),     # 513–548.
+  #
+  # Rasmusen, E., others. (2007). The BLP method of demand curve estimation in 
+  # industrial organization. Paper, Department of Business Economics and Public 
+  # Policy, Kelley School of Business, Indiana University.(Disponible en Http
+  # ://Www. Rasmusen. Org/Papers/Blp-Rasmusen. Pdf).
   
   blp_inner <- function(delta.in, mu.in) {
     # Computes a single update of the BLP (1995) contraction mapping.
@@ -43,12 +54,22 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
     # This function computes the GMM objective function
     # Requires global variable inputs: X, v, delta, a, W
     # Outputs: theta1, xi.hat
+    
+    cat('\n');
+    cat('\n');
+    cat('\n');
+    cat('\n');
+    
     print(paste0("GMM Loop number: ", Sys.time()))
     print(a <<- a + 1)
+    
+    cat('\n');
+    
     print("Updated theta2 estimate:")
     print(theta2)
     print("Change in theta2 estimate:")
     print(theta.chg <- as.numeric(theta2 - theta2.prev));
+    
     if(sum(theta.chg != 0) <= 2){
       delta <- dat[, "delta"];
     } else {
@@ -58,10 +79,28 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
     
     mu <- X %*% diag(theta2) %*% v;
     
+    cat('\n');
+    
     print("Running SQUAREM contraction mapping")
     print(system.time(
-      squarem.output <- squarem(par = delta, fixptfn = blp_inner, mu.in = mu, control = list(trace = TRUE))
+      squarem.output <- squarem(par = delta, fixptfn = blp_inner, mu.in = mu, 
+                                control = list(K = 1, method = 3, square = TRUE, 
+                                               step.min0 = 1, step.max0 = 1, 
+                                               mstep = 4, kr = Inf, objfn.inc = 1, 
+                                               tol = 1e-12, maxiter = 1500, 
+                                               trace = FALSE, intermed = FALSE))
     ));
+    
+    cat('\n');
+    
+    print("Number of contraction mapping (inner loop) iterations:")
+    print(squarem.output$iter)
+    
+    print("Did contraction mapping (inner loop) converge:")
+    print(squarem.output$convergence)
+    
+    cat('\n');
+    
     delta <- squarem.output$par
     print(summary(dat[, "delta"] - delta));
     dat[, "delta"] <<- delta;
@@ -78,13 +117,20 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
       xi.hat <<- delta - X %*% theta1
       X.hat <- (PZ %*% X) * matrix(rep(xi.hat, K), ncol = K)
       tsls.se <- sqrt(diag(PX.inv %*% t(X.hat) %*% X.hat %*% PX.inv))
+      
+      cat('\n');
+      
       print("GMM step 2 updated theta1 estimate:")
       print(beta.est <<- data.frame(beta.est = theta1, beta.se = tsls.se, sigma.est = theta2))
     }
     dat[, "xi.hat"] <<- xi.hat
     f <- t(xi.hat) %*% PZ %*% xi.hat;
+    
+    cat('\n');
+    
     print("Updated GMM objective:")
     print(f <- as.numeric(f));
+    
     return(f)
   }
   
@@ -105,6 +151,9 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
     })
     dsigma <- as.matrix(do.call("cbind", dsigma))
     print(paste0("Calculating ddelta matrices, ", Sys.time()))
+    
+    cat('\n');
+    
     ddelta <- list()
     for(m in mkt.id){
       if(m %in% names(ddelta)){next}
@@ -122,10 +171,13 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   
   gradient_obj <- function(theta2){
     #Requires global variables PZ, delta, xi.hat
+    
+    cat('\n');
+    
     print(system.time(jacobian_res <<- jacobian(as.vector(dat[, "delta"]), theta2)))
     print(paste0("Updated gradient:", Sys.time()))
     print(f <- -2 * as.numeric(t(jacobian_res) %*% PZ %*% xi.hat));
-    #######
+    
     L <- ncol(Z)
     covg <- matrix(0, nrow = L, ncol = L)
     for(i in 1:JT){
@@ -136,6 +188,9 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
     p.Dg <- try(solve(Dg %*% W.inv %*% t(Dg)))
     cov.mat <- p.Dg %*% (Dg %*% W.inv %*% covg %*% W.inv %*% t(Dg)) %*% p.Dg
     beta.est$sigma.se <<- sqrt(diag(cov.mat));
+    
+    cat('\n');
+    
     print(paste0("Updated coefficients table:", Sys.time()))
     print(beta.est)
     write.csv(beta.est, file = paste0("BLP_beta_est_", Sys.Date(), ".csv"))
@@ -194,6 +249,9 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   dat[, "xi.hat"] <- xi.hat
   
   #Starting point
+  
+  cat('\n');
+  
   print("Sigma guess:")
   if(missing(sigma.guess)){
     tsls.se <- beta.est[, 2]
@@ -218,15 +276,20 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
     l.X[[k]] %*% t(l.v[[k]]);
   })
   
+  cat('\n');
+  
   print("Estimating random coefficients multinomial logit")
   a <- 0;
   beta.est <- NULL;
 #  while(!require(SQUAREM)){install.packages("SQUAREM")}
 #  while(!require(BB)){install.packages("BB")}
   print(system.time(
-    theta.est <- multiStart(par = theta2, fn = gmm_obj, gr = gradient_obj, lower = 0, control = list(trace = TRUE, checkGrad=FALSE), action = "optimize")
+    theta.est <- multiStart(par = theta2, fn = gmm_obj, gr = gradient_obj, lower = 0, control = list(trace = TRUE, checkGrad=FALSE, ftol = 1.e-6), action = "optimize")
   ));
   save(theta.est, file = paste0("theta_est_", Sys.time(), ".RData"))
+  
+  cat('\n');
+  cat('\n');
   
   print("Final coefficients estimate:")
   theta2 <- theta.est$par
