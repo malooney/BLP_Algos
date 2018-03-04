@@ -222,6 +222,9 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   str.ivreg.x <- paste(x.var.flds, collapse = " + ")
   str.ivreg.prc <- paste(prc.fld, collapse = " + ")
   str.ivreg.iv <- paste(prc.iv.flds, collapse = " + ")
+  
+  say('time')
+  
   print("2SLS specification:")
   print(fm.ivreg <- paste0(str.ivreg.y, str.ivreg.x, " + ", str.ivreg.prc, " | ", str.ivreg.x, " + ", str.ivreg.iv))
   rm(str.ivreg.y, str.ivreg.x, str.ivreg.prc, str.ivreg.iv)
@@ -297,4 +300,6 @@ BerryLevinsohnPakes <- function(dat, mkt.id.fld = "mkt.id", prod.id.fld = "prod.
   gmm.res <- gmm_obj(theta2)
   grad.res <- gradient_obj(theta2)	
   return(list(coef.mat = beta.est, gmm.obj.func = gmm.res, gmm_est = theta.est, final.data = dat))
+  
+  say('time')
 }
