@@ -56,7 +56,7 @@ theta2w=[2.0682    2.1000    1.0473;
   
   vfull=v(cdid,:);
   dfull=demogr(cdid,:);
-  tic
+  %tic
   %options=foptions;
   %options(2)=0.01;
   %options(3)=0.001;
@@ -65,11 +65,11 @@ theta2w=[2.0682    2.1000    1.0473;
   [theta2,fval] = fminunc(@gmmobj, theta2, options)
   
   %theta2 = fmins('gmmobj',theta2)
-  comp_t=toc/60;
+  %comp_t=toc/60;
 %  disp(['GMM objective:  ' num2str(options(8))])
 %disp(['# of objective function evaluations:  ' num2str(options(10))])
-disp(['run time (minutes):  ' num2str(comp_t)])
-diary off
+%disp(['run time (minutes):  ' num2str(comp_t)])
+%diary off
 
   vcov=var_cov(theta2);
   se=sqrt(diag(vcov));

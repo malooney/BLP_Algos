@@ -275,7 +275,7 @@ res <- nloptr(c(est.blp$alpha, est.blp$sigma),
               }, 
               lb= rep(0.01, 1+length(est.blp$sigma)),
               opts= list(algorithm= "NLOPT_LN_BOBYQA",
-                        print_level= 0, maxeval=500000, "xtol_rel"=1.0e-12)
+                        print_level= 0, maxeval=500000, "xtol_rel"=1.0e-6)
               )
 
 alpha <- res$solution[1]

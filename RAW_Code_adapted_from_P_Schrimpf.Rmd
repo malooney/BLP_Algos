@@ -15,6 +15,7 @@ rm(list=ls())
 library(hdm) ## contains BLP data
 library(MASS)
 data(BLP)
+
 BLP <- BLP$BLP
 ## Note: despite what the hdm package's documentation says, price is not
 ## log price; it is price - mean(price). If you compare the quantiles
@@ -30,7 +31,7 @@ BLP$cdid <- BLP$cdid- min(BLP$cdid)+1
 
 # estimates from Table 3 of BLP paper, column 1
 library(lfe)
-summary(lm(log(share)-log(`BLP$outshr`) ~ hpwt + air + mpd + space + price,
+summary(lm(log(share)-log(BLP$outshr) ~ hpwt + air + mpd + space + price,
            data=BLP))
 
 
