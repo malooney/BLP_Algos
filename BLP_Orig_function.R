@@ -23,15 +23,16 @@ BerryLevinsohnPakes <- function(dat,
   #
   # Based on code written by B Chidmi, May 1998:
   # Chidmi, B., & Murova, O. (2011). Measuring market power in the supermarket 
-  # industry: the case of the Seattle–Tacoma fluid milk market. Agribusiness, 27
-  # (4), 435–449.
+  # industry: the case of the Seattle–Tacoma fluid milk market. Agribusiness,
+  # 27 (4), 435–449.
   #
   # Based on code written by Aviv Nevo, May 1998:
-  # Nevo, A. (2000). A Practitioner's Guide to Estimation of Random‐Coefficients   # Logit Models of Demand. Journal of Economics & Management Strategy, 9(4),     # 513–548.
+  # Nevo, A. (2000). A Practitioner's Guide to Estimation of Random ‐ 
+  # Coefficients Logit Models of Demand. Journal of Economics & Management 
+  # Strategy, 9(4),     # 513–548.
   #
   # Rasmusen, E., others. (2007). The BLP method of demand curve estimation in 
-  # industrial organization. Paper, Department of Business Economics and Public 
-  # Policy, Kelley School of Business, Indiana University.(Disponible en Http
+  # industrial organization. Paper, Department of Business Economics and Public   # Policy, Kelley School of Business, Indiana University.(Disponible en Http
   # ://Www. Rasmusen. Org/Papers/Blp-Rasmusen. Pdf).
   
   blp_inner <- function(delta.in, mu.in) {
@@ -195,11 +196,12 @@ BerryLevinsohnPakes <- function(dat,
   }
   
   gradient_obj <- function(theta2){
-    #Requires global variables PZ, delta, xi.hat
+    # Requires global variables PZ, delta, xi.hat
     
     cat('\n');
     
-    print(system.time(jacobian_res <<- jacobian(as.vector(dat[, "delta"]), theta2)))
+    print(system.time(jacobian_res <<- jacobian(as.vector(dat[, "delta"]),
+                                                theta2)))
     print(paste0("Updated gradient:", Sys.time()))
     print(f <- -2 * as.numeric(t(jacobian_res) %*% PZ %*% xi.hat));
     
@@ -222,16 +224,16 @@ BerryLevinsohnPakes <- function(dat,
     return(as.numeric(f))
   }
   
-  #Set up data
+  # Set up data
   dat <- dat[dat[, share.fld] > 0, ]
   dat <- dat[order(dat[, mkt.id.fld], dat[, prod.id.fld]), ]
   JT <- nrow(dat)
   #market identifier variable
   mkt.id <- dat[, mkt.id.fld];
-  #Number of characteristics (including constant and price)
+  # Number of characteristics (including constant and price)
   X <- as.matrix(cbind(ones= rep(1, JT), dat[, c(x.var.flds, prc.fld)]));
   K <- ncol(X)
-  #Compute the outside good market share by market
+  # Compute the outside good market share by market
   s.jt <- as.vector(dat[, share.fld]);
   temp <- aggregate(s.jt, by= list(mkt.id= mkt.id), sum);
   sum1 <- temp$x[match(mkt.id, temp$mkt.id)];
@@ -240,17 +242,18 @@ BerryLevinsohnPakes <- function(dat,
   dat[, "delta"] <- Y <- log(s.jt)- log(s.j0);
   iv <- dat[, prc.iv.flds]
   
-#  while(!require(AER)){install.packages("AER")}
-  #Construct 2SLS regression specification
+  # while(!require(AER)){install.packages("AER")}
+  # Construct 2SLS regression specification
   str.ivreg.y <- "delta ~ "
   str.ivreg.x <- paste(x.var.flds, collapse= " + ")
   str.ivreg.prc <- paste(prc.fld, collapse= " + ")
   str.ivreg.iv <- paste(prc.iv.flds, collapse= " + ")
   
-  say('time')
+  start_time <- Sys.time()
   
   print("2SLS specification:")
-  print(fm.ivreg <- paste0(str.ivreg.y, str.ivreg.x, " + ", str.ivreg.prc, " | ", str.ivreg.x, " + ", str.ivreg.iv))
+  print(fm.ivreg <- paste0(str.ivreg.y, str.ivreg.x, " + ", str.ivreg.prc, 
+                           " | ", str.ivreg.x, " + ", str.ivreg.iv))
   rm(str.ivreg.y, str.ivreg.x, str.ivreg.prc, str.ivreg.iv)
   
   print("2SLS beta estimate:")
@@ -278,7 +281,7 @@ BerryLevinsohnPakes <- function(dat,
   }
   dat[, "xi.hat"] <- xi.hat
   
-  #Starting point
+  # Starting point
   
   cat('\n');
   
@@ -311,8 +314,8 @@ BerryLevinsohnPakes <- function(dat,
   print("Estimating random coefficients multinomial logit")
   a <- 0;
   beta.est <- NULL;
-#  while(!require(SQUAREM)){install.packages("SQUAREM")}
-#  while(!require(BB)){install.packages("BB")}
+  # while(!require(SQUAREM)){install.packages("SQUAREM")}
+  # while(!require(BB)){install.packages("BB")}
   print(system.time(
     theta.est <- multiStart(par= theta2, 
                             fn= gmm_obj, 
@@ -334,8 +337,12 @@ BerryLevinsohnPakes <- function(dat,
   gmm.res <- gmm_obj(theta2)
   grad.res <- gradient_obj(theta2)	
   
-  say('time')
+  end_time <- Sys.time()
+  time_diff <- end_time-start_time
+  say(paste0("start time:\n", start_time, "\nend time:\n", end_time, 
+             "\ntime difference (min):\n", time_diff), 'cat')
   
-  return(list(coef.mat= beta.est, gmm.obj.func= gmm.res, gmm_est= theta.est, final.data= dat))
+  return(list(coef.mat= beta.est, gmm.obj.func= gmm.res, gmm_est= theta.est,
+              final.data= dat))
   
 }

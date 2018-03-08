@@ -1,0 +1,512 @@
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp3 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "price",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+results$exp4 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "price",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+results$exp4 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "price",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+results$exp4 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "price",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+results$exp5 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "price",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp2 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp3 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+results[["exp3"]][["coef.mat"]][["beta.est"]]
+View(results[["exp3"]][["coef.mat"]])
+-10.0601037/.41043443
+-7.061/.941
+results$exp6 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp7 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp8 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp9 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(dat)
+results$exp10 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+mean(results$exp1$coef.mat$beta.est)
+mean(results$exp1$coef.mat$beta.est[1])
+View(results)
+View(results[["exp10"]][["coef.mat"]])
+View(results[["exp10"]][["coef.mat"]])
+View(results[["exp9"]][["coef.mat"]])
+View(results[["exp8"]][["coef.mat"]])
+View(dat)
+dat$logPRICE <- 3.08-log(dat$price)
+View(dat)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- 3.08-log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp2 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp3 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, same as mkt
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = c("hpwt", "air", "mpd", "space"),
+prc.iv.flds = c("logHPWT","logSIZE",  "logMPG", "trend"),
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+View(results[["exp2"]][["coef.mat"]])
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- 3.08-log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+variables <- c("hpwt", "air", "mpd", "space")
+i.variables <- c("logHPWT","logSIZE",  "logMPG", "trend")
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(dat)
+log(3)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(3.08)-log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+variables <- c("hpwt", "air", "mpd", "space")
+i.variables <- c("logHPWT","logSIZE",  "logMPG", "trend")
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(3.08 -dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logPRICE <- log(abs(3.08 -dat$price))
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(abs(3.08 -dat$price))
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+variables <- c("hpwt", "air", "mpd", "space")
+i.variables <- c("logHPWT","logSIZE",  "logMPG", "trend")
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+#source("/home/malooney/blp_function.R")
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+variables <- c("hpwt", "air", "mpd", "space")
+i.variables <- c("logHPWT","logSIZE",  "logMPG", "trend")
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+#sigma.guess=c(0.2, 0.5, 0.2, 0.05, 0.07, 0.05)
+a <- unlist(results)
+a <- data.frame(unlist(results))
+View(a)
+a <- data.frame(unlist(results[[1:2]]))
+a <- data.frame(unlist(results[[1]]))
+a <- matrix(unlist(results), nrow=1)
+View(a)
+View(results)
+55/60
+49/60
+View(results)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSIZE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+variables <- c("hpwt", "air", "mpd", "space")
+i.variables <- c("logHPWT","logSIZE",  "logMPG", "trend")
+results$exp1 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+results$exp2 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+View(results)
+results[["exp1"]][["coef.mat"]][["beta.est"]][1]
+results[["exp1"]][["coef.mat"]][["beta.est"]]
+results[["exp1"]][["coef.mat"]][["beta.est"]][1]/results[["exp1"]][["coef.mat"]][["beta.se"]]
+View(results[["exp1"]][["coef.mat"]])
+View(results[["exp1"]][["coef.mat"]])
+results[["exp1"]][["coef.mat"]][["beta.se"]]
+3.0483657/0.12466938
+-2.1481966/0.21919021
+View(results)
+results[["exp2"]][["coef.mat"]][["beta.est"]]
+results[["exp2"]][["coef.mat"]][["beta.se"]]
+-0.07342587/0.17174564
+min(dat$price)
+max(dat$price)
+log(0)
+log(.0000001)
+log(.001)
+log(2)
+log(3)
+log(1)
+log(3)-log(1)
+log(3)+log(1+(1/3))
+log(1+(1/3))
+log(3)
+log(2)
+log(3)-log(1+(1/3))
+log(3)-log(1-(1/3))
+log(3)+log(1-(1/3))
+log(3000-7000)
+log(3000)+log(1-(7000/3000))
+log(3000)+ log(1-(7000/3000))
+log(3)+ log(1-(7/3))
+log(3000)
+log(1-(7000/3000))
+7000/3000
+?log
+log(1, exp(1))
+log(1)
+log(3000)*log(3000-7000, base=exp(1))
+log(3000)*log(3000-7000, base=exp(3000))
+log(3000)*log(3000-7000, base=(3000))
+log(-4, base=exp(1))
+log(exp, -4)
+log(exp(1), -4)
+logb(-4)
+log(0)
+log(.01)
+log(1)
+log(2)
+log(3)
+rm(list=ls())
+library(hdm)
+library(SQUAREM)
+library(AER)
+library(BB)
+library(cowsay)
+dat <- BLP$BLP
+dat$price <- dat$price + 11.761
+dat$logPRICE <- log(dat$price)
+dat$logHPWT <- log(dat$hpwt)
+dat$logMPD <- log(dat$mpd)
+dat$logMPG <- log(dat$mpg)
+dat$logSPACE <- log(dat$space)
+source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Orig_function.R")
+results <- list()
+variables <- c("hpwt", "air", "mpd", "space")
+i.variables <- c("logHPWT","air", "logMPD", "logSPACE",  "logMPG", "trend")
+results$exp2 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+results$exp3 <- BerryLevinsohnPakes(dat=dat,
+mkt.id.fld = "cdid",
+prod.id.fld = "cdid", # if null, use cdid.
+prc.fld = "logPRICE",
+share.fld="share",
+x.var.flds = variables,
+prc.iv.flds = i.variables,
+tol_inner = 1e-12,
+tol_outer = 1e-6,
+n.sim=100)
+a <- say('time')
+a
+a <- say('time')
+a
+say
+class(say('time'))
+?cowsay
+library(cowsay)
+say()
+a <- Sys.time()
+a
+say(a, 'time')
+say(a)
+say(paste(a, sep=""))
+say(paste("start :", a, sep=""))
+say(paste("start :", "/n", a, sep=""))
+say(paste("start :", /n, a, sep=""))
+say(paste("start :", a, sep="/n"))
+say(paste("start :", a, sep='/n'))
+say(paste("start :", a, sep=`/n``))
+say(paste("start :", a, sep=`/n`))

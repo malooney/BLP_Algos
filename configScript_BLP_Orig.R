@@ -15,7 +15,7 @@ dat$logPRICE <- log(dat$price)
 dat$logHPWT <- log(dat$hpwt)
 dat$logMPD <- log(dat$mpd)
 dat$logMPG <- log(dat$mpg)
-dat$logSIZE <- log(dat$space)
+dat$logSPACE <- log(dat$space)
 
 
 #source("/home/malooney/blp_function.R")
@@ -25,17 +25,22 @@ source("/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/BLP_Ori
 results <- list()
 
 variables <- c("hpwt", "air", "mpd", "space")
-i.variables <- c("logHPWT","logSIZE",  "logMPG", "trend")
+i.variables <- c("logHPWT", "logMPG", "logSPACE", "trend")
 
-results$exp2 <- BerryLevinsohnPakes(dat=dat, 
+results$exp1 <- BerryLevinsohnPakes(dat=dat, 
                                     mkt.id.fld = "cdid", 
                                     prod.id.fld = "cdid", # if null, use cdid.
-                                    prc.fld = "logPRICE", 
+                                    prc.fld = "price", 
                                     share.fld="share", 
                                     x.var.flds = variables, 
                                     prc.iv.flds = i.variables, 
                                     tol_inner = 1e-12, 
                                     tol_outer = 1e-6, 
-                                    n.sim=100)
+                                    n.sim=200)
+
+
+
+
+
 
 #sigma.guess=c(0.2, 0.5, 0.2, 0.05, 0.07, 0.05)
