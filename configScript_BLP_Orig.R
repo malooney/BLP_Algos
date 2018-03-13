@@ -34,7 +34,7 @@ results$exp1 <- BerryLevinsohnPakes(dat=dat,
                                     share.fld="share", 
                                     x.var.flds = variables, 
                                     prc.iv.flds = i.variables, 
-                                    tol_inner = 1e-12, 
+                                    tol_inner = 1e-6, 
                                     tol_outer = 1e-6, 
                                     n.sim=200)
 

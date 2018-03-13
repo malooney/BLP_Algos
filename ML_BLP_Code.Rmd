@@ -35,10 +35,10 @@ BLP$price <- BLP$price + 11.761
 BLP$mpd <- BLP$mpd* 10
 BLP$mpg <- BLP$mpg* 10
 
-quantile(BLP$price, c(0,0.25,0.5,0.75,1))
-quantile(BLP$hpwt, c(0,0.25,0.5,0.75,1))
-quantile(BLP$space, c(0,0.25,0.5,0.75,1))
-quantile(BLP$mpd, c(0,0.25,0.5,0.75,1))
+quantile(dat$price, c(0,0.25,0.5,0.75,1))
+quantile(dat$hpwt, c(0,0.25,0.5,0.75,1))
+quantile(dat$space, c(0,0.25,0.5,0.75,1))
+quantile(dat$mpd, c(0,0.25,0.5,0.75,1))
 quantile(BLP$mpg, c(0,0.25,0.5,0.75,1))
 
 #BLP <- subset(BLP,cdid >= 17) ## use small subset to make it faster

@@ -1,0 +1,26 @@
+
+========================================================================
+                       optimization routine : 3
+                     set of starting values : 1
+========================================================================
+theta2 starting values:
+   -2.586421   -0.616377    0.227579   -0.715240   -0.990075
+{Undefined function or variable 'solvopt'.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('main', '/Users/malooney/Downloads/dataverse_files/ReStat upload/2014.06.04 BLP tight inner e06 upload/main.m', 248)" style="font-weight:bold">main</a> (<a href="matlab: opentoline('/Users/malooney/Downloads/dataverse_files/ReStat upload/2014.06.04 BLP tight inner e06 upload/main.m',248,0)">line 248</a>)
+            [theta2,fval,tmp] = solvopt(theta2,'gmmobj2','gradobj',options);
+} 
+main
+
+========================================================================
+                       optimization routine : 3
+                     set of starting values : 1
+========================================================================
+theta2 starting values:
+   -2.586421   -0.616377    0.227579   -0.715240   -0.990075
+{Undefined function or variable 'solvopt'.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('main', '/Users/malooney/Downloads/dataverse_files/ReStat upload/2014.06.04 BLP tight inner e06 upload/main.m', 248)" style="font-weight:bold">main</a> (<a href="matlab: opentoline('/Users/malooney/Downloads/dataverse_files/ReStat upload/2014.06.04 BLP tight inner e06 upload/main.m',248,0)">line 248</a>)
+            [theta2,fval,tmp] = solvopt(theta2,'gmmobj2','gradobj',options);
+} 
+main
