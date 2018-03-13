@@ -143,7 +143,7 @@ blp_exp2500 <- readRDS("/Users/malooney/Downloads/BLP_exp1/BLP_est_2018-03-12 18
 
 blp_exp5000 <- readRDS("/Users/malooney/Downloads/BLP_exp1/BLP_est_2018-03-12 18:00:35.rds")
 
-blp_exp10000 <- readRDS("/Users/malooney/Downloads/BLP_exp1/BLP_est_2018-03-12 21:42:45.rds")
+blp_exp10000 <- readRDS("/Users/malooney/Downloads/BLP_exp1/BLP_est_2018-03-12 22:57:38.rds")
 
 results_BLP_est100 <- results_shape(blp_exp100)
 results_BLP_est500 <- results_shape(blp_exp500)
