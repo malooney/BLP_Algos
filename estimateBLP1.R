@@ -231,7 +231,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                               numeric(1)),
                       dim(instruments)[1]))
   
-  if ( length( nobsTmp ) > 1 )
+  if ( length( nobsTmp ) > 1 ) # ensure matrix is conformable
     stop("All variables need to have the same length.")
   
   # subset checks:
@@ -534,7 +534,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     stop("Provide a valid printLevel.")
   
   if( printLevel < 0 )
-    printLevel<- 0
+    printLevel <- 0
   if( printLevel > 4 )
     printLevel<- 4
   
@@ -638,7 +638,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   if (total.demogr > 0) {
     
     
-    drawsInDemogr<- unlist(
+    drawsInDemogr <- unlist(
       lapply( demographicData,
               function(i){
                 draws <- ncol(i) -1 # minus 1 because of cdid col.
@@ -648,18 +648,18 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     
     if( any( drawsInDemogr < amountNodes ) )
       stop("Number of draws for at least one demographic is
-           smaller as the provided integration accuracy.
+           smaller than the provided integration accuracy.
            Include more draws for demographics.")
     #future version might include automatic resampling for this case
     
     
     
-    tmp<- lapply( demographics,
+    tmp <- lapply( demographics,
                   function(i){
                     tmpDemogr.data <- as.data.frame( demographicData[[ i ]] )
-                    tmpDemogr_cdid <- get(cdid,tmpDemogr.data)
+                    tmpDemogr_cdid <- get(cdid, tmpDemogr.data)
                     
-                    if( any( table(tmpDemogr_cdid) >1) )
+                    if( any( table(tmpDemogr_cdid) > 1) )
                       stop("Demographic data is not unique for at least one market.")
                     
                     # becomes relevant, if data were reordered by cdid:
@@ -708,7 +708,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     starting.guesses.delta <- rep(0,nrow(productData))
   }
   
-  theta2Mat_precheck<- .get.theta2.reshape(theta2.in       = starting.guesses.theta2.optim,
+  theta2Mat_precheck <- .get.theta2.reshape(theta2.in       = starting.guesses.theta2.optim,
                                            totalRC         = K,
                                            total.demogr.in = total.demogr,
                                            indices.in      = indices,
@@ -788,7 +788,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                   blp.results = blp.results,
                   
                   printLevel = printLevel)
-    solverMessage<- if( res$convergence>=0 ) "Successful convergence" else paste("See error code (ucminf package)", res$convergence )
+    solverMessage <- if( res$convergence>=0 ) "Successful convergence" else paste("See error code (ucminf package)", res$convergence )
     outer.it.out <-  res$info["neval"]
     
   }else{ # Standard R optimizers
@@ -1003,7 +1003,7 @@ get.gmm.obj <- function(theta2 ,
                         blp.results,
                         printLevel){
   
-  theta2Mat<- .get.theta2.reshape(theta2.in       = theta2,
+  theta2Mat <- .get.theta2.reshape(theta2.in       = theta2,
                                   totalRC         = blp.parameters$K,
                                   total.demogr.in = blp.parameters$total.demogr,
                                   indices.in      = blp.parameters$indices,

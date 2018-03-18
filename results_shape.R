@@ -1,7 +1,10 @@
 
 results_shape <- function(x){
   
-  temp <- matrix(nrow= length(x), ncol=23)
+  numCol <- length(x[[i]][[2]])+ length(x[[i]][[4]])+ length(x[[i]][[1]])+ 
+    length(x[[i]][[3]]) + length(x[[i]][[5]])
+  
+  temp <- matrix(nrow= length(x), ncol= numCol)
   
   for(i in seq_along(x)){
     
