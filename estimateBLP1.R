@@ -415,7 +415,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   }
   
   
-  gradientIndicator <- TRUE # gradients are used for optimzation; was specified as an argument of estimateBLP in earlier versions
+  gradientIndicator <- TRUE # gradients are used for optimzation
   
   if(gradientIndicator){
     gradient <- get.gmm.gr  # function 'gradient' is used in optim
@@ -540,6 +540,9 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   
   
   
+  
+  
+  
   ### Input Storage----
   
   #Sort data by cdid and renew index:
@@ -566,16 +569,16 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     iv.data<- c()
   }
   
-  Z <- cbind(Xexo.data, iv.data)  #all Instruments (labeled IV in Nevos' Code)
+  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
   
   W <-  try( solve((t(Z) %*% Z)) )
   if (class(W) == "try-error")
-    stop("Problems with singular matrizes. This might be caused by (nearly) linear dependent regressors or weak instruments.")
+    stop("Problems with singular matrix. This might be caused by (nearly) linear dependent regressors or weak instruments.")
   xzwz <- t(Xlin.data) %*% Z %*% W %*% t(Z)
   xzwzx <- xzwz %*% Xlin.data
   invxzwzx <- try( solve(xzwzx) )
   if (class(invxzwzx) == "try-error")
-    stop("Problems with singular matrizes. This might be caused by (nearly) linear dependent regressors or weak instruments.")
+    stop("Problems with singular matrix. This might be caused by (nearly) linear dependent regressors or weak instruments.")
   
   # for data preparation + storage of demographics see the integration part
   
@@ -650,7 +653,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
       stop("Number of draws for at least one demographic is
            smaller than the provided integration accuracy.
            Include more draws for demographics.")
-    #future version might include automatic resampling for this case
+    
     
     
     
@@ -679,7 +682,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     
     
     # Demographic data is arranged in a matrix, with the draws of
-    # different variables next to each other :
+    # different variables next to each other : similar to Nevo and Chidmi
     relevantDemogr.data <- do.call(cbind,tmp)
     
   }else{
@@ -720,7 +723,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                               cdid = cdidOrdered,
                               demographics = relevantDemogr.data )
   if( any( is.infinite( InfCheckMatrix )))
-    stop("Overflow for starting values of *starting.guesses.theta2* . Provide other starting values or rescale your data.")
+    stop("Overflow for starting values of *starting.guesses.theta2* . Provide other starting values or rescale data.")
   
   
   
@@ -739,7 +742,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   blp.results <- new.env( parent = emptyenv())
   blp.results$deltaOld <- starting.guesses.delta
   blp.results$innerItAll <- c()
-  blp.results$negShares<- FALSE
+  blp.results$negShares <- FALSE
   blp.results$gradient <- rep(NA_real_,
                               length( starting.guesses.theta2.optim ) )
   
@@ -788,7 +791,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                   blp.results = blp.results,
                   
                   printLevel = printLevel)
-    solverMessage <- if( res$convergence>=0 ) "Successful convergence" else paste("See error code (ucminf package)", res$convergence )
+    solverMessage <- if( res$convergence >=0 ) "Successful convergence" else paste("See error code (ucminf package)", res$convergence )
     outer.it.out <-  res$info["neval"]
     
   }else{ # Standard R optimizers
@@ -805,7 +808,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                  blp.results = blp.results,
                  
                  printLevel = printLevel)
-    solverMessage<- if( res$convergence==0 ) "Successful convergence" else paste("See error code (optim package)", res$convergence )
+    solverMessage <- if( res$convergence==0 ) "Successful convergence" else paste("See error code (optim package)", res$convergence )
     outer.it.out <-  res$counts[1]
     
   }
@@ -841,7 +844,15 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   names(theta.lin.out) <- Xlin
   
   theta.rc.out <- res$par
-  names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
+  
+  if(total.demogr > 0) {
+    RcCoefficients <- c( Xrandom,
+                         kronecker( demographics, Xrandom, paste))
+    names(theta.rc.out) <- RcCoefficients # full naming is done in summary
+  } else {
+    names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
+  }
+  
   
   gradient.out <- blp.results$gradient
   jacob.out <- blp.results$jacobian
@@ -873,6 +884,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   
   
   ### Waldstatistic
+  # may need to include other tests, check with Chidmi.
   WaldStatistic<- t(matrix( theta.rc.out )) %*%
     solve(COV[-(1:length(Xlin)), -(1:length(Xlin)) ]) %*%
     matrix( theta.rc.out )
@@ -881,6 +893,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   if( extremumCheck ) {
     #from now on, dont use blp.results environment anymore:
     blp.parameters$gradientIndicator <- FALSE # Hessian does not need gradient
+    # hessian is slow, may need to code in C
     hessian <- invisible(hessian(func = get.gmm.obj, x = res$par,
                                  blp.integration = blp.integration,
                                  blp.parameters =  blp.parameters,
@@ -943,7 +956,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   }
   
   ### Output list ----
-  output<- list("theta.rc" = theta.rc.out, # solver results...
+  output <- list("theta.rc" = theta.rc.out, # solver results...
                 "theta.linear" = theta.lin.out,
                 "se.rc" = seRc.out,
                 "se.linear" = seLinear.out,

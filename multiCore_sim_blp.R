@@ -1,3 +1,5 @@
+
+
 rm(list=ls())
 
 library(hdm)
@@ -46,11 +48,11 @@ demographicData <- list("income"=Demog)
 
 K <- length(Xrandom) # number of random coefficients
 
-simple.logit <- lm( log(share)- log(outshr) ~ hpwt + air + mpg + space + price, data=dat)
+simple.logit <- lm( log(share)- log(outshr) ~ hpwt + air + mpd + space + price, data=dat)
 
 dat$starting.delta <- simple.logit$fitted.values+ rnorm(length(dat$cdid), mean=0, sd= abs(simple.logit$residuals))
 
-starting.theta2 <- matrix(rnorm(K, mean=0, sd=1), nrow=K, ncol=length(demographics)+1)
+starting.theta2 <-matrix( rnorm(K, mean=0, sd=1), nrow=K, ncol=length(demographics)+1 )
 
 rm(simple.logit, Z)
 
@@ -71,19 +73,19 @@ oneRun <- function(.){
                        blp.control = list(inner.tol = 1e-16, 
                                           inner.maxit = 5000), 
                        integration.control= list(method="MLHS", 
-                                                 amountNodes= 10000, 
+                                                 amountNodes= 100, 
                                                  seed= NULL), 
                        postEstimation.control= list(standardError = "robust", 
                                                     extremumCheck = FALSE, 
                                                     elasticities = "price"), 
-                       printLevel = 0)}
+                       printLevel = 4)}
 
 
 library(parallel)
-cl <- makeCluster(8)
+cl <- makeCluster(1)
 
 start <- Sys.time()
-multi_Run_demog_8_10000 <- mclapply(X=1:1, FUN=oneRun, mc.cores=8)
+multi_Run_demog <- mclapply(X=1:1, FUN=oneRun, mc.cores=1)
 end <- Sys.time()
 time <- end-start
 
@@ -93,14 +95,27 @@ rm(cl)
 
 source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/results_shape.R')
 
-results_BLP_8_10000 <- results_shape(a)
+results_BLP_8_200 <- results_shape(multi_Run_demog_8_200)
+results_BLP_8_200_1 <- results_shape(multi_Run_demog_8_200_1)
+results_BLP_8_200_2 <- results_shape(multi_Run_demog_8_200_2)
+results_BLP_8_200_3 <- results_shape(multi_Run_demog_8_200_3)
 
-par(mfrow=c(3,1))
-plot(density(results_BLP_8_10000[,2] ), xlim=c(-5, 5))
-plot(density(results_BLP_8_10000[,14]), xlim=c(-5, 5))
-plot(density(results_BLP_8_10000[,18]), xlim=c(-5, 5))
+par(mfrow=c(4,3))
+plot(density(results_BLP_8_200[,2] ), xlim=c(-5, 5))
+plot(density(results_BLP_8_200[,14]), xlim=c(-5, 5))
+plot(density(results_BLP_8_200[,18]), xlim=c(-5, 5))
 
+plot(density(results_BLP_8_200_1[,2] ), xlim=c(-5, 5))
+plot(density(results_BLP_8_200_1[,14]), xlim=c(-5, 5))
+plot(density(results_BLP_8_200_1[,18]), xlim=c(-5, 5))
 
+plot(density(results_BLP_8_200_2[,2] ), xlim=c(-5, 5))
+plot(density(results_BLP_8_200_2[,14]), xlim=c(-5, 5))
+plot(density(results_BLP_8_200_2[,18]), xlim=c(-5, 5))
+
+plot(density(results_BLP_8_200_3[,2] ), xlim=c(-5, 5))
+plot(density(results_BLP_8_200_3[,14]), xlim=c(-5, 5))
+plot(density(results_BLP_8_200_3[,18]), xlim=c(-5, 5))
 
 
 

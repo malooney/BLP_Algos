@@ -224,7 +224,11 @@ BerryLevinsohnPakes <- function(dat,
     return(as.numeric(f))
   }
   
-  # Set up data
+ 
+  
+  
+  
+   # Set up data
   dat <- dat[dat[, share.fld] > 0, ]
   dat <- dat[order(dat[, mkt.id.fld], dat[, prod.id.fld]), ]
   JT <- nrow(dat)
@@ -280,6 +284,9 @@ BerryLevinsohnPakes <- function(dat,
     print(beta.est <- data.frame(beta.est= theta1, se.est= tsls.se))
   }
   dat[, "xi.hat"] <- xi.hat
+  
+  
+  
   
   # Starting point
   
