@@ -10,7 +10,7 @@ load milkdata
 
 IV=[I pr PL]; %Instrumental Variables
 
-ns=200; % number of cps draw
+ns=20; % number of cps draw
 nmkt=58; % number of markets
 nbrn=6; % number of brands
 cdid=kron([1:nmkt]',ones(nbrn,1)); % gives the market id
@@ -37,17 +37,20 @@ theta2w=[2.0682    2.1000    1.0473;
 %       'Puffed  '];
  %load invA 
 
- invA =inv(IV'*IV); 
-  temp=cumsum(s);
-  sum1=temp(cdindex,:);
-  sum1(2:size(sum1,1),:) = diff(sum1);
-  outshr=1-sum1(cdid,:);
+ invA= inv(IV'*IV); 
+ 
+  temp= cumsum(s);
+  sum1= temp(cdindex,:);
+  sum1(2:size(sum1,1),:)= diff(sum1);
+  outshr= 1-sum1(cdid,:);
   y=log(s)-log(outshr);
-  mid= X1' * IV* invA* IV';
-  ttt=inv(mid*X1)*mid*y;
-  mvalold=X1*ttt;
-  oldt2=zeros(size(theta2));
-  mvaold=exp(mvalold);
+  
+  mid= X1'* IV* invA* IV';
+  simple_logit= inv(X1'*X1)*X1'*y; % simple logit, no IV's
+  ttt= inv(mid* X1)* mid* y; % simple logit, with IV's
+  mvalold= X1* ttt;
+  oldt2= zeros(size(theta2));
+  mvaold= exp(mvalold);
   
   save mvaold mvaold oldt2
   %save invA invA

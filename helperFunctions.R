@@ -1,6 +1,6 @@
 
 
-###########################
+##.indexing.markets#########################
 .indexing.markets <- function( cdidOld ) {
   unique.ids <- unique(cdidOld)
   nmkt <- length(unique.ids)
@@ -18,7 +18,7 @@
 }
 
 
-###########################
+##.get.theta2.reshape#########################
 .get.theta2.reshape <- function(theta2.in, totalRC, total.demogr.in,
                                 indices.in, fill, printLevel) {
   
@@ -34,7 +34,7 @@
   return(theta2.matrix.out)
 }
 
-############################
+##.MLHS##########################
 
 .MLHS <- function(D, N) {
   
@@ -49,7 +49,7 @@
   }
   return( shuffleddraws )
 }
-############################
+##.Halton##########################
 
 .Halton<-function(D, N , randomized){
   

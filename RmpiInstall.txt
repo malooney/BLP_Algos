@@ -1,0 +1,16 @@
+R CMD INSTALL Rmpi_0.6-6.tar.gz
+
+R CMD INSTALL Rmpi_0.6-6.tar.gz --configure-args= --with-mpi=/opt/intel/compilers_and_libraries_2017.3.191/linux/mpi/intel64/include/
+
+
+
+R CMD INSTALL Rmpi_version.tar.gz --configure-args=--with-mpi=/path/to/central_location_dir
+
+
+
+R CMD INSTALL \
+    --configure-vars="CPPFLAGS=-I/opt/intel/compilers_and_libraries_2017.3.191/linux/mpi/intel64/include LDFLAGS='-L/opt/intel/compilers_and_libraries_2017.3.191/linux/mpi/intel64/lib'" \
+    --configure-args="--with-Rmpi-include=/opt/intel/compilers_and_libraries_2017.3.191/linux/mpi/intel64/include \
+                      --with-Rmpi-libpath=/opt/intel/compilers_and_libraries_2017.3.191/linux/mpi/intel64/lib \
+                      --with-Rmpi-type=OPENMPI" \
+    -l /home/malooney/R/x86_64-pc-linux-gnu-library/3.2 Rmpi_0.6-6.tar.gz

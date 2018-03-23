@@ -14,7 +14,7 @@ library(randtoolbox)
 library(rngWELL)
 library(R.matlab)
 #library(SQUAREM)
-#library(AER)
+library(AER)
 #library(BB)
 #library(cowsay)
 
@@ -47,7 +47,7 @@ data.milk <- data.frame("constant"= rep(1, times=nmkt*nbrn),
                         "electricity.iv"= milkdata$elect, 
                         "packaging.indx.iv"= milkdata$pack/100,
                         "rawMilkPrice.iv"= milkdata$pf,
-                        "wage.iv"= milkdata$wage, 
+                        "wage.iv"= milkdata$wage/10, 
                         "interest1.iv"= milkdata$int1, 
                         "interest2.iv"= milkdata$int2, 
                         "interest3.iv"= milkdata$int3,
@@ -57,9 +57,12 @@ data.milk <- data.frame("constant"= rep(1, times=nmkt*nbrn),
                         "share"= milkdata$s[,1]
                         )
 
-rm(milkdata)
+income <- milkdata$Y
+kids <- milkdata$kids
+IV <- data.frame(cbind(milkdata$I, milkdata$pr, milkdata$PL))
+D <- milkdata$demogr1[,1:342]
 
-outshr <- function(share, cdid, nmkt, nbrn){
+outshr <- function(share, cdid, nmkt, nbrn){ # function to calculate outshr
   
   cdindex <- seq(nbrn, nbrn*nmkt, nbrn) # indexes the markets
   
@@ -72,54 +75,83 @@ outshr <- function(share, cdid, nmkt, nbrn){
 
 outshr <- data.frame(outshr= outshr(data.milk$share, data.milk$cdid, nmkt, nbrn))
 
-data.milk <- cbind(data.milk, outshr)
+data.milk <- cbind(data.milk, outshr, IV)
 
-simple.logit <- lm( log(share)- log(outshr)~ price.Alb+ promo.Alb+ PL1+ MCD.rFat+ SD.Alb+ Obsp, data= data.milk) 
+iv.names <- sprintf("X%d",seq(1:45))
+iv.names <- paste(paste(iv.names, collapse=" + "))
 
-eii <- data.frame(eii= -1* simple.logit$coefficients[2]* data.milk$price.Alb* (1- data.milk$share))
+summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price.Alb+ promo.Alb+ PL1+ MCD.rFat+ SD.Alb+ Obsp, data= data.milk))
 
-Xlin = c("price.Alb", 
+summary( iv.simple.logit <- ivreg(log(share)- log(outshr)~ 0+ price.Alb+ 
+                                    promo.Alb+ PL1+ MCD.rFat+ SD.Alb+ Obsp | 
+                                    X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + 
+                                    X9 + X10 + X11 + X12 + X13 + X14 + X15 + 
+                                    X16 + X17 + X18 + X19 + X20 + X21 + X22 +
+                                    X23 + X24 + X25 + X26 + X27 + X28 + X29 +
+                                    X30 + X31 + X32 + X33 + X34 + X35 + X36 +
+                                    X37+ X38 + X39 + X40 + X41 + X42 + X43 + 
+                                    X44 + X45, data=data.milk))
+
+eii <- data.frame(eii= 1* simple.logit$coefficients[2]* data.milk$price.Alb* (1- data.milk$share))
+
+Xlin = c("price.Alb",
          "promo.Alb",
+         "PL1",
          "MCD.rFat", 
-         "SD.Alb")
+         "SD.Alb",
+         "Obsp")
 
-Xrandom = c("constant", 
+Xrandom = c("constant",
             "price.Alb",
+            "promo.Alb",
+            "PL1",
             "MCD.rFat",  
             "SD.Alb")
 
 Xexo =  c("promo.Alb",
+          "PL1",
           "MCD.rFat", 
-          "SD.Alb")
+          "SD.Alb",
+          "Obsp")
 
-instruments = c("constant", 
-                "electricity.iv", 
-                "packaging.indx.iv", 
-                "rawMilkPrice.iv", 
-                "wage.iv", 
-                "interest1.iv", 
-                "interest2.iv", 
-                "interest3.iv",
-                "pr.iv")
+instruments = c("X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10",
+                "X11", "X12", "X13", "X14", "X15", "X16", "X17", "X18", "X19",
+                "X20", "X21", "X22", "X23", "X24", "X25", "X26", "X27", "X28",
+                "X29", "X30", "X31", "X32", "X33", "X34", "X35", "X36", "X37",
+                "X38", "X39", "X40", "X41", "X42", "X43", "X44", "X45")
 
-ns <- 10000
+ns <- 1000
+cdid_demog <-  data.frame("cdid"= 1:(nmkt))
 
-cdid_demog= data.frame("cdid"= 1:(nmkt*nbrn))
-data_demog= data.frame(matrix(rlnorm(ns*nmkt, 5.335001, 0.1743534), nrow= nmkt))
-Demog <- cbind(cdid_demog, data_demog)
+data_demog_income <- income/10000
+#vfull <- milkdata$v[data.milk$cdid,]
+#dfull1 <- data.frame(milkdata$demogr[data.milk$cdid,][,1:20])
+#data_demog_income <- D # reproduce Chidmi
+Demog_income <- cbind(cdid_demog, data_demog_income)
+data_demog_kids <- kids
+Demog_kids <- cbind(cdid_demog, data_demog_kids)
 
-demographics <- "income"
-demographicData <- list("income"=Demog)
+demographics <- c("income", "kids")
+demographicData <- list("income"= Demog_income, 
+                        "kids"= Demog_kids)
 
 K <- length(Xrandom) # number of random coefficients
 
-data.milk$starting.delta <- simple.logit$fitted.values+ rnorm(length(data.milk$cdid), mean=0, sd= abs(simple.logit$residuals))
+data.milk$starting.delta <- iv.simple.logit$fitted.values+ rnorm(length(data.milk$cdid), mean=0, sd= abs(iv.simple.logit$residuals))
 
-starting.theta2 <- matrix(c(2.0682, 2.1000, 1.0473, 1.5541), 
-                          nrow= K, ncol= length(demographics))
-#starting.theta2 <- matrix( rnorm(K, mean= 0, sd= 1), nrow= K, ncol= length(demographics))#+ 1 )
+# starting.theta2 <- matrix(c(2.0682,    2.1000,    1.0473,
+#                             1.5541,    2.0352,   -0.8324,
+#                             0.6403,    2.6775,    1.3040,
+#                             -0.3018,    1.2227,    3.4240,
+#                             0.6605,    3.1289,    1.8451,
+#                             1.0198,    0.8942,    1.3901),
+#                          nrow= K,
+#                          ncol= length(demographics)+ 1,
+#                          byrow = TRUE)
 
-rm(simple.logit)
+starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 3), nrow= K, ncol= length(demographics)+ 1 )
+
+rm(milkdata, outshr, IV, iv.names, D, simple.logit, iv.simple.logit, eii, cdid_demog, data_demog_income, Demog_income, data_demog_kids, Demog_kids, income, kids)
 
 oneRun <- function(.){ 
   estimateBLP1(Xlin = Xlin, 
@@ -129,16 +161,16 @@ oneRun <- function(.){
                shares = "share", 
                cdid = "cdid", 
                productData = data.milk,
-               #demographics = demographics,
-               #demographicData = demographicData,
+               demographics = demographics,
+               demographicData = demographicData,
                starting.guesses.theta2 = starting.theta2, 
                solver.control = list(maxeval = 5000), 
                solver.method = "BFGS_matlab", 
                starting.guesses.delta =  data.milk$starting.delta, 
                blp.control = list(inner.tol = 1e-16, 
                                   inner.maxit = 5000), 
-               integration.control= list(method="MLHS", 
-                                         amountNodes= 10000, 
+               integration.control= list(method= "MC", 
+                                         amountNodes= 300, 
                                          seed= NULL), 
                postEstimation.control= list(standardError = "robust", 
                                             extremumCheck = FALSE, 
@@ -147,22 +179,41 @@ oneRun <- function(.){
 
 
 library(parallel)
-#cl <- makeCluster(1)
 
+cl <- makeCluster(8)
 start <- Sys.time()
-multi_Run_milk <- mclapply(X=1:1, FUN=oneRun, mc.cores=1)
+multi_Run_milk <- mclapply(X= 1:8, FUN= oneRun, mc.cores= 8)
 end <- Sys.time()
-time <- end-start
+time <- end- start
 time
-#stopCluster(cl)
-#rm(cl)
+stopCluster(cl)
+rm(cl)
 
-summary(multi_Run_milk[[1]])
-
-
+#summary(multi_Run_milk[[4]])
 
 
+source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/results_shape.R')
 
+multi_Run_milk_res <- results_shape(multi_Run_milk)
+
+par(mfrow=c(4,4))
+plot(density(multi_Run_milk_res[,1]), xlim=c(-6, 1.5), main="PriceAlb linear")
+rug(jitter(multi_Run_milk_res[,1]))
+plot(density(multi_Run_milk_res[,2]), xlim=c(-6, 4), main="PromoAlb linear")
+rug(jitter(multi_Run_milk_res[,2]))
+plot(density(multi_Run_milk_res[,4]), xlim=c(-6, 4), main="Milk D.rFat linear")
+rug(jitter(multi_Run_milk_res[,4]))
+plot(density(multi_Run_milk_res[,5]), xlim=c(-6, 1.5), main="Store D linear")
+rug(jitter(multi_Run_milk_res[,5]))
+
+plot(density(multi_Run_milk_res[,13]), xlim=c(-6, 4), main="constant rc")
+rug(jitter(multi_Run_milk_res[,13]))
+plot(density(multi_Run_milk_res[,14]), xlim=c(-6, 1.5), main="priceAlb rc")
+rug(jitter(multi_Run_milk_res[,14]))
+plot(density(multi_Run_milk_res[,17]), xlim=c(-6, 4), main="Milk D.rFat linear rc")
+rug(jitter(multi_Run_milk_res[,17]))
+plot(density(multi_Run_milk_res[,18]), xlim=c(-6, 4), main="Store D rc")
+rug(jitter(multi_Run_milk_res[,18]))
 
 
 

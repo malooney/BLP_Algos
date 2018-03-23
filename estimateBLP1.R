@@ -569,16 +569,21 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     iv.data<- c()
   }
   
-  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+#  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+  Z <- cbind(iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+  
   
   W <-  try( solve((t(Z) %*% Z)) )
   if (class(W) == "try-error")
-    stop("Problems with singular matrix. This might be caused by (nearly) linear dependent regressors or weak instruments.")
-  xzwz <- t(Xlin.data) %*% Z %*% W %*% t(Z)
+    stop("Problems with singular matrix. This might be caused by (nearly)
+         linear dependent regressors or weak instruments.")
+  
+  xzwz <- t(Xlin.data) %*% Z %*% W %*% t(Z) # mid in Nevo/Chidmi code
   xzwzx <- xzwz %*% Xlin.data
   invxzwzx <- try( solve(xzwzx) )
   if (class(invxzwzx) == "try-error")
-    stop("Problems with singular matrix. This might be caused by (nearly) linear dependent regressors or weak instruments.")
+    stop("Problems with singular matrix. This might be caused by (nearly)
+         linear dependent regressors or weak instruments.")
   
   # for data preparation + storage of demographics see the integration part
   
@@ -866,7 +871,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   b <- t(IVres) %*% IVres
   tmpSE <- try( solve(a %*% W %*% t(a)) )
   if (class(tmpSE) == "try-error"){
-    stop("Standard errors cannot be computed due to singular matrizes.")
+    stop("Standard errors cannot be computed due to singular matrix.")
   } else{
     if( standardError == "robust") { # default
       cat("Using robust standard errors... \n")
