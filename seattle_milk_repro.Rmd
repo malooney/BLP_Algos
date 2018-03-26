@@ -26,7 +26,7 @@ ns=20 # number of cps draw
 nmkt=58 # number of markets
 nbrn=6 # number of brands
 
-cdid= rep(1:58, each = 6, times = 1)  # gives the market id
+cdid= rep(1:nmkt, each = nbrn, times = 1)  # gives the market id
 cdindex <- seq(nbrn, nbrn*nmkt, nbrn) # indexes the markets
 
 # starting values. zero elements in the following matrix correspond to coeff 

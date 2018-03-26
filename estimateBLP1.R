@@ -569,8 +569,8 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     iv.data<- c()
   }
   
-#  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
-  Z <- cbind(iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+#  Z <- cbind(iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
   
   
   W <-  try( solve((t(Z) %*% Z)) )
@@ -850,13 +850,13 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   
   theta.rc.out <- res$par
   
-  if(total.demogr > 0) {
-    RcCoefficients <- c( Xrandom,
-                         kronecker( demographics, Xrandom, paste))
-    names(theta.rc.out) <- RcCoefficients # full naming is done in summary
-  } else {
-    names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
-  }
+  # if(total.demogr > 0) {
+  #   RcCoefficients <- c( Xrandom,
+  #                        kronecker( demographics, Xrandom, paste))
+  #   names(theta.rc.out) <- RcCoefficients # full naming is done in summary
+  # } else {
+  #   names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
+  # }
   
   
   gradient.out <- blp.results$gradient
@@ -988,6 +988,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                 
                 "WaldStatistic" =   WaldStatistic, # Postestimation...
                 "IslocalMin" = isMin.out,
+                "HessianEigenvalues" = hessianEig,
                 "elasticities" = elasticitiy_results,
                 
                 "solver" = solver.method, # Parameters important for other functions

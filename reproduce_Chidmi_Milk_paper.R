@@ -149,7 +149,7 @@ data.milk$starting.delta <- iv.simple.logit$fitted.values+ rnorm(length(data.mil
 #                          ncol= length(demographics)+ 1,
 #                          byrow = TRUE)
 
-starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 3), nrow= K, ncol= length(demographics)+ 1 )
+starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 1), nrow= K, ncol= length(demographics)+ 1 )
 
 rm(milkdata, outshr, IV, iv.names, D, simple.logit, iv.simple.logit, eii, cdid_demog, data_demog_income, Demog_income, data_demog_kids, Demog_kids, income, kids)
 
@@ -170,7 +170,7 @@ oneRun <- function(.){
                blp.control = list(inner.tol = 1e-16, 
                                   inner.maxit = 5000), 
                integration.control= list(method= "MC", 
-                                         amountNodes= 300, 
+                                         amountNodes= 20, 
                                          seed= NULL), 
                postEstimation.control= list(standardError = "robust", 
                                             extremumCheck = FALSE, 
@@ -180,40 +180,58 @@ oneRun <- function(.){
 
 library(parallel)
 
-cl <- makeCluster(8)
+#cl <- makeCluster(1)
 start <- Sys.time()
-multi_Run_milk <- mclapply(X= 1:8, FUN= oneRun, mc.cores= 8)
+multi_Run_milk <- mclapply(X= 1:1, FUN= oneRun, mc.cores= 1)
 end <- Sys.time()
 time <- end- start
 time
-stopCluster(cl)
-rm(cl)
+#stopCluster(cl)
+#rm(cl)
 
 #summary(multi_Run_milk[[4]])
 
 
-source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/results_shape.R')
-
-multi_Run_milk_res <- results_shape(multi_Run_milk)
-
-par(mfrow=c(4,4))
-plot(density(multi_Run_milk_res[,1]), xlim=c(-6, 1.5), main="PriceAlb linear")
-rug(jitter(multi_Run_milk_res[,1]))
-plot(density(multi_Run_milk_res[,2]), xlim=c(-6, 4), main="PromoAlb linear")
-rug(jitter(multi_Run_milk_res[,2]))
-plot(density(multi_Run_milk_res[,4]), xlim=c(-6, 4), main="Milk D.rFat linear")
-rug(jitter(multi_Run_milk_res[,4]))
-plot(density(multi_Run_milk_res[,5]), xlim=c(-6, 1.5), main="Store D linear")
-rug(jitter(multi_Run_milk_res[,5]))
-
-plot(density(multi_Run_milk_res[,13]), xlim=c(-6, 4), main="constant rc")
-rug(jitter(multi_Run_milk_res[,13]))
-plot(density(multi_Run_milk_res[,14]), xlim=c(-6, 1.5), main="priceAlb rc")
-rug(jitter(multi_Run_milk_res[,14]))
-plot(density(multi_Run_milk_res[,17]), xlim=c(-6, 4), main="Milk D.rFat linear rc")
-rug(jitter(multi_Run_milk_res[,17]))
-plot(density(multi_Run_milk_res[,18]), xlim=c(-6, 4), main="Store D rc")
-rug(jitter(multi_Run_milk_res[,18]))
+# source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/results_shape.R')
+# 
+# multi_Run_milk_res <- results_shape(multi_Run_milk)
+# 
+# par(mfrow=c(4,4))
+# plot(density(multi_Run_milk_res[,1]), xlim=c(-6, 4), main="PriceAlb linear")
+# rug(jitter(multi_Run_milk_res[,1]))
+# plot(density(multi_Run_milk_res[,2]), xlim=c(-6, 4), main="PromoAlb linear")
+# rug(jitter(multi_Run_milk_res[,2]))
+# plot(density(multi_Run_milk_res[,4]), xlim=c(-6, 4), main="Milk D.rFat linear")
+# rug(jitter(multi_Run_milk_res[,4]))
+# plot(density(multi_Run_milk_res[,5]), xlim=c(-6, 4), main="Store D linear")
+# rug(jitter(multi_Run_milk_res[,5]))
+# 
+# plot(density(multi_Run_milk_res[,13]), xlim=c(-6, 4), main="constant rc")
+# rug(jitter(multi_Run_milk_res[,13]))
+# plot(density(multi_Run_milk_res[,14]), xlim=c(-6, 4), main="priceAlb rc")
+# rug(jitter(multi_Run_milk_res[,14]))
+# plot(density(multi_Run_milk_res[,17]), xlim=c(-6, 4), main="Milk D.rFat linear rc")
+# rug(jitter(multi_Run_milk_res[,17]))
+# plot(density(multi_Run_milk_res[,18]), xlim=c(-6, 4), main="Store D rc")
+# rug(jitter(multi_Run_milk_res[,18]))
+# 
+# plot(density(multi_Run_milk_res[,19]), xlim=c(-6, 4), main="income constant rc")
+# rug(jitter(multi_Run_milk_res[,19]))
+# plot(density(multi_Run_milk_res[,20]), xlim=c(-6, 4), main="income priceAlb rc")
+# rug(jitter(multi_Run_milk_res[,20]))
+# plot(density(multi_Run_milk_res[,23]), xlim=c(-6, 4), main="income Milk D.rFat linear rc")
+# rug(jitter(multi_Run_milk_res[,23]))
+# plot(density(multi_Run_milk_res[,24]), xlim=c(-6, 4), main="income Store D rc")
+# rug(jitter(multi_Run_milk_res[,24]))
+# 
+# plot(density(multi_Run_milk_res[,25]), xlim=c(-6, 4), main="kids constant rc")
+# rug(jitter(multi_Run_milk_res[,25]))
+# plot(density(multi_Run_milk_res[,26]), xlim=c(-6, 4), main="kids priceAlb rc")
+# rug(jitter(multi_Run_milk_res[,26]))
+# plot(density(multi_Run_milk_res[,29]), xlim=c(-6, 4), main="kids Milk D.rFat linear rc")
+# rug(jitter(multi_Run_milk_res[,29]))
+# plot(density(multi_Run_milk_res[,30]), xlim=c(-6, 4), main="kids Store D rc")
+# rug(jitter(multi_Run_milk_res[,30]))
 
 
 
