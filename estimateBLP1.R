@@ -569,8 +569,8 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     iv.data<- c()
   }
   
-  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
-#  Z <- cbind(iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+#  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+  Z <- cbind(iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
   
   
   W <-  try( solve((t(Z) %*% Z)) )
@@ -988,7 +988,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                 
                 "WaldStatistic" =   WaldStatistic, # Postestimation...
                 "IslocalMin" = isMin.out,
-                "HessianEigenvalues" = hessianEig,
+                "HessianEigenvalues" = if( extremumCheck )hessianEig,
                 "elasticities" = elasticitiy_results,
                 
                 "solver" = solver.method, # Parameters important for other functions

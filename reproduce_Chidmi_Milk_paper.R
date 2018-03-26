@@ -4,6 +4,7 @@
 
 
 rm(list=ls())
+cat("\014")
 
 #library(hdm)
 library(ucminf)
@@ -16,12 +17,6 @@ library(R.matlab)
 #library(SQUAREM)
 library(AER)
 #library(BB)
-#library(cowsay)
-
-cat("\014")
-rm(list=ls())
-#set.seed(12345)
-#options(scipen=999)
 
 Rcpp::sourceCpp('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/cppFunctions.cpp')
 
@@ -123,10 +118,10 @@ instruments = c("X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10",
 ns <- 1000
 cdid_demog <-  data.frame("cdid"= 1:(nmkt))
 
-data_demog_income <- income/10000
+#data_demog_income <- income/10000
 #vfull <- milkdata$v[data.milk$cdid,]
 #dfull1 <- data.frame(milkdata$demogr[data.milk$cdid,][,1:20])
-#data_demog_income <- D # reproduce Chidmi
+data_demog_income <- D # reproduce Chidmi
 Demog_income <- cbind(cdid_demog, data_demog_income)
 data_demog_kids <- kids
 Demog_kids <- cbind(cdid_demog, data_demog_kids)
@@ -149,7 +144,7 @@ data.milk$starting.delta <- iv.simple.logit$fitted.values+ rnorm(length(data.mil
 #                          ncol= length(demographics)+ 1,
 #                          byrow = TRUE)
 
-starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 1), nrow= K, ncol= length(demographics)+ 1 )
+starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 3), nrow= K, ncol= 1 )
 
 rm(milkdata, outshr, IV, iv.names, D, simple.logit, iv.simple.logit, eii, cdid_demog, data_demog_income, Demog_income, data_demog_kids, Demog_kids, income, kids)
 
@@ -161,19 +156,21 @@ oneRun <- function(.){
                shares = "share", 
                cdid = "cdid", 
                productData = data.milk,
-               demographics = demographics,
-               demographicData = demographicData,
+               #demographics = demographics,
+               #demographicData = demographicData,
                starting.guesses.theta2 = starting.theta2, 
-               solver.control = list(maxeval = 5000), 
-               solver.method = "BFGS_matlab", 
+               solver.control = list(maxeval = 5000,
+                                     solver.reltol= 1e-2), #outer tol), 
+               solver.method = "BFGS", 
                starting.guesses.delta =  data.milk$starting.delta, 
-               blp.control = list(inner.tol = 1e-16, 
+               blp.control = list(inner.tol = 1e-6, 
                                   inner.maxit = 5000), 
                integration.control= list(method= "MC", 
                                          amountNodes= 20, 
-                                         seed= NULL), 
+                                         seed= NULL,
+                                         output= TRUE), 
                postEstimation.control= list(standardError = "robust", 
-                                            extremumCheck = FALSE, 
+                                            extremumCheck = TRUE, 
                                             elasticities = "price.Alb"), 
                printLevel = 1)}
 
@@ -189,7 +186,7 @@ time
 #stopCluster(cl)
 #rm(cl)
 
-#summary(multi_Run_milk[[4]])
+summary(multi_Run_milk[[1]])
 
 
 # source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/results_shape.R')
