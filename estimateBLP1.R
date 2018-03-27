@@ -393,6 +393,25 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                         "maxeval" = solver.maxit,
                         "grtol" = solver.reltol)
     
+  } else if(solver.method == "L-BFGS-B") {
+    
+    if( "maxit" %in% names(solver.control) ){
+      solver.maxit <- solver.control$maxit
+      solver.control$maxit <- NULL # prevents list entries with same names
+    }
+    if( "reltol" %in% names(solver.control) ){
+      solver.reltol <- solver.control$reltol
+      solver.control$reltol <- NULL # prevents list entries with same names
+    }
+    # prevent name conflicts, because other names than known by the solver are not allowed:
+    solver.control$maxeval<- NULL
+    solver.control$grtol<- NULL
+    solver.control$solver.maxit<- NULL
+    solver.control$solver.reltol<- NULL
+    
+    solver.control <- c(solver.control,
+                        "maxit" = solver.maxit,
+                        "factr" = solver.reltol)
   } else {
     
     if( "maxit" %in% names(solver.control) ){
@@ -972,6 +991,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                 "inner.it" = innerItAll.out,
                 "delta" = delta.out,
                 "xi" = xi.out,
+                "vcov" = COV,
                 
                 "demographicNames" = if( total.demogr > 0 ) demographics , # Names and amounts...
                 "RcNames" = Xrandom,
