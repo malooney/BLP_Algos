@@ -3,7 +3,7 @@
 rm(list=ls())
 cat("\014")
 
-MDE= FALSE
+MDE= TRUE
 
 #library(hdm)
 library(ucminf)
@@ -160,7 +160,7 @@ cereal.data$delta.actual <- log(cereal.data$share)- log(cereal.data$outshr)
 #                              1.1859, NA, 0.0296, -1.5143,
 #                              NA, 11.6245, NA, NA), nrow= K, ncol= 5)
 
-starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 1), nrow= K, ncol= length(demographics)+ 1 )
+starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 4), nrow= K, ncol= length(demographics)+ 1 )
 starting.theta2[1, c(3,5)] <- NA
 starting.theta2[2, c(4)] <- NA
 starting.theta2[3, c(3,5)] <- NA
