@@ -569,8 +569,8 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     iv.data<- c()
   }
   
-#  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
-  Z <- cbind(iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+  Z <- cbind(Xexo.data, iv.data)  # all Instruments (labeled IV in Nevo and Chidmi Code)
+  #Z <- iv.data  # all Instruments (labeled IV in Nevo and Chidmi Code)
   
   
   W <-  try( solve((t(Z) %*% Z)) )
@@ -1285,7 +1285,7 @@ get.jacob <- function(sij,
     if (blp.parameters$total.demogr > 0) {
       dt[ , ] <- blp.data$demographics[i, ]}
     
-    x2t[ , ] <- blp.data$Xrandom[market.identifier, , drop = FALSE]  # w?hle die werte x2
+    x2t[ , ] <- blp.data$Xrandom[market.identifier, , drop = FALSE]
     sijt[ , ] <- sij[market.identifier, ]
     dsdxi[ , ] <- .dstdxit(sijt,
                            blp.integration$weights)
@@ -1297,7 +1297,7 @@ get.jacob <- function(sij,
                                 blp.parameters = blp.parameters)
     
     
-    tmp <- try(-solve(dsdxi) %*% dsdtheta, silent = T) # ;% tmp darf nicht initialisiert werden, da der Klassenbefehl mit try error nicht mehr geht
+    tmp <- try(-solve(dsdxi) %*% dsdtheta, silent = T) 
     
     if (class(tmp) == "try-error") {
       if (printLevel >= 2) {

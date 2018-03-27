@@ -6,6 +6,8 @@ load milkdata
 load mvaold
 load gmmresid
 %load invA
+
+
 N=size(X1,1);
 Z=size(IV,2);
 temp=jacob(mvaold,theta2);

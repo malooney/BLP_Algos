@@ -133,7 +133,11 @@ starting.theta2 <- matrix( c(0.3772, 1.848, -0.0035, 0.081,
                              1.1859, NA, 0.0296, -1.5143,
                              NA, 11.6245, NA, NA), nrow= K, ncol= 5)
 
-#starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 2), nrow= K, ncol= length(demographics)+ 1 )
+# starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 4), nrow= K, ncol= length(demographics)+ 1 )
+# starting.theta2[1, c(3,5)] <- NA
+# starting.theta2[2, c(4)] <- NA
+# starting.theta2[3, c(3,5)] <- NA
+# starting.theta2[4, c(3,5)] <- NA
 
 rm(simple.logit, iv.simple.logit, eii, outshr, cdid, constant, demog_age, demog_income, demog_income_2, demog_kids, x1_1, cdid_demog, cereal_ps3, demogr, ps_2.mat)
 
@@ -150,7 +154,7 @@ oneRun <- function(.){
                starting.guesses.theta2 = starting.theta2, 
                solver.control = list(maxeval = 5000,
                                      solver.reltol= 1e-2), #outer tol
-               solver.method = "BFGS", 
+               solver.method = "L-BFGS-B", 
                starting.guesses.delta =  cereal.data$starting.delta, 
                blp.control = list(inner.tol = 1e-6, 
                                   inner.maxit = 5000), 

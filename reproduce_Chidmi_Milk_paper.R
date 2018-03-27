@@ -52,10 +52,7 @@ data.milk <- data.frame("constant"= rep(1, times=nmkt*nbrn),
                         "share"= milkdata$s[,1]
                         )
 
-income <- milkdata$Y
-kids <- milkdata$kids
 IV <- data.frame(cbind(milkdata$I, milkdata$pr, milkdata$PL))
-D <- milkdata$demogr1[,1:342]
 
 outshr <- function(share, cdid, nmkt, nbrn){ # function to calculate outshr
   
@@ -115,16 +112,14 @@ instruments = c("X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9", "X10",
                 "X29", "X30", "X31", "X32", "X33", "X34", "X35", "X36", "X37",
                 "X38", "X39", "X40", "X41", "X42", "X43", "X44", "X45")
 
-ns <- 1000
-cdid_demog <-  data.frame("cdid"= 1:(nmkt))
 
-#data_demog_income <- income/10000
-#vfull <- milkdata$v[data.milk$cdid,]
-#dfull1 <- data.frame(milkdata$demogr[data.milk$cdid,][,1:20])
-data_demog_income <- D # reproduce Chidmi
-Demog_income <- cbind(cdid_demog, data_demog_income)
-data_demog_kids <- kids
-Demog_kids <- cbind(cdid_demog, data_demog_kids)
+cdid_demog <-  data.frame("cdid"= 1:(nmkt))
+v <- milkdata$v
+weights <- matrix(rep(1/20, 20), nrow=20)
+
+demogr <- milkdata$demogr # reproduce Chidmi
+Demog_income <- cbind(cdid_demog, demogr[,1:20])
+Demog_kids <- cbind(cdid_demog, demogr[,21:40])
 
 demographics <- c("income", "kids")
 demographicData <- list("income"= Demog_income, 
@@ -134,19 +129,19 @@ K <- length(Xrandom) # number of random coefficients
 
 data.milk$starting.delta <- iv.simple.logit$fitted.values+ rnorm(length(data.milk$cdid), mean=0, sd= abs(iv.simple.logit$residuals))
 
-# starting.theta2 <- matrix(c(2.0682,    2.1000,    1.0473,
-#                             1.5541,    2.0352,   -0.8324,
-#                             0.6403,    2.6775,    1.3040,
-#                             -0.3018,    1.2227,    3.4240,
-#                             0.6605,    3.1289,    1.8451,
-#                             1.0198,    0.8942,    1.3901),
-#                          nrow= K,
-#                          ncol= length(demographics)+ 1,
-#                          byrow = TRUE)
+starting.theta2 <- matrix(c(2.0682,    2.1000,    1.0473,
+                            1.5541,    2.0352,   -0.8324,
+                            0.6403,    2.6775,    1.3040,
+                            -0.3018,    1.2227,    3.4240,
+                            0.6605,    3.1289,    1.8451,
+                            1.0198,    0.8942,    1.3901),
+                         nrow= K,
+                         ncol= length(demographics)+ 1,
+                         byrow = TRUE)
 
-starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 3), nrow= K, ncol= 1 )
+#starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 3), nrow= K, ncol= 1 )
 
-rm(milkdata, outshr, IV, iv.names, D, simple.logit, iv.simple.logit, eii, cdid_demog, data_demog_income, Demog_income, data_demog_kids, Demog_kids, income, kids)
+rm(milkdata, outshr, IV, iv.names, simple.logit, iv.simple.logit, eii, cdid_demog, Demog_income, Demog_kids, demogr)
 
 oneRun <- function(.){ 
   estimateBLP1(Xlin = Xlin, 
@@ -156,8 +151,8 @@ oneRun <- function(.){
                shares = "share", 
                cdid = "cdid", 
                productData = data.milk,
-               #demographics = demographics,
-               #demographicData = demographicData,
+               demographics = demographics,
+               demographicData = demographicData,
                starting.guesses.theta2 = starting.theta2, 
                solver.control = list(maxeval = 5000,
                                      solver.reltol= 1e-2), #outer tol), 
@@ -166,7 +161,9 @@ oneRun <- function(.){
                blp.control = list(inner.tol = 1e-6, 
                                   inner.maxit = 5000), 
                integration.control= list(method= "MC", 
-                                         amountNodes= 20, 
+                                         amountNodes= 20,
+                                         nodes= v,
+                                         weights=weights, 
                                          seed= NULL,
                                          output= TRUE), 
                postEstimation.control= list(standardError = "robust", 
