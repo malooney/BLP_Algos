@@ -869,13 +869,16 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   
   theta.rc.out <- res$par
   
-  # if(total.demogr > 0) {
-  #   RcCoefficients <- c( Xrandom,
-  #                        kronecker( demographics, Xrandom, paste))
-  #   names(theta.rc.out) <- RcCoefficients # full naming is done in summary
-  # } else {
-  #   names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
-  # }
+  if(total.demogr > 0) {
+    used_RcCoefficients <-which(is.na(starting.theta2))
+    RcCoefficients <- c( Xrandom,
+                         kronecker( demographics, Xrandom, paste))
+    RcCoefficients <- RcCoefficients[-used_RcCoefficients]
+    names(theta.rc.out) <- RcCoefficients # full naming is done in summary
+    
+  } else {
+    names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
+  }
   
   
   gradient.out <- blp.results$gradient
@@ -955,7 +958,7 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
                                                                          all_randomCoef = theta.rc.out,
                                                                          all_linearCoef = theta.lin.out,
                                                                          nodesRCMktShape = nodesRcMktShape,
-                                                                         nodesDemMktShape = relevantDemogr.data ,
+                                                                         nodesDemMktShape = relevantDemogr.data,
                                                                          Integration_Weights = weights,
                                                                          totalDemographics = total.demogr,
                                                                          indices_InParameters = indices,

@@ -154,17 +154,17 @@ cereal.data$starting.delta <- iv.simple.logit$fitted.values+ rnorm(length(cereal
 
 cereal.data$delta.actual <- log(cereal.data$share)- log(cereal.data$outshr)
 
-# starting.theta2 <- matrix( c(0.3772, 1.848, -0.0035, 0.081,
-#                              3.0888, 16.5980, -0.1925, 1.4684,
-#                              NA, -0.6590, NA, NA,
-#                              1.1859, NA, 0.0296, -1.5143,
-#                              NA, 11.6245, NA, NA), nrow= K, ncol= 5)
+starting.theta2 <- matrix( c(0.3772, 1.848, -0.0035, 0.081,
+                             3.0888, 16.5980, -0.1925, 1.4684,
+                             NA, -0.6590, NA, NA,
+                             1.1859, NA, 0.0296, -1.5143,
+                             NA, 11.6245, NA, NA), nrow= K, ncol= 5)
 
-starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 4), nrow= K, ncol= length(demographics)+ 1 )
-starting.theta2[1, c(3,5)] <- NA
-starting.theta2[2, c(4)] <- NA
-starting.theta2[3, c(3,5)] <- NA
-starting.theta2[4, c(3,5)] <- NA
+# starting.theta2 <- matrix( rnorm(K*(length(demographics)+ 1), mean= 0, sd= 4), nrow= K, ncol= length(demographics)+ 1 )
+# starting.theta2[1, c(3,5)] <- NA
+# starting.theta2[2, c(4)] <- NA
+# starting.theta2[3, c(3,5)] <- NA
+# starting.theta2[4, c(3,5)] <- NA
 
 rm(simple.logit, iv.simple.logit, eii, outshr, cdid, constant, demog_age, demog_income, demog_income_2, demog_kids, x1_1, cdid_demog, cereal_ps3, demogr, ps_2.mat)
 
@@ -223,7 +223,7 @@ summary(multi_Run_cereal_Nevo[[1]])
 
 if(MDE==TRUE){
 # Minimum Distance Estimator (MDE)
-
+mde <- function(){
 omega = solve(multi_Run_cereal_Nevo[[1]]$vcov[2:25,2:25], 
               tol=.Machine$double.eps^3);
 xmd = cbind(cereal.data$constant[1:24], cereal.data$sugar[1:24], 
@@ -238,7 +238,9 @@ t_mde = beta/semd
 
 MDE_estimator_Linear_Betas <- data.frame( Betas=c(beta[1], multi_Run_cereal_Nevo[[1]]$theta.linear[1], beta[2:3]), SE=c(semd[1],  multi_Run_cereal_Nevo[[1]]$se.linear[1], semd[2:3]), tValue=c(t_mde[1], multi_Run_cereal_Nevo[[1]]$theta.linear[1]/multi_Run_cereal_Nevo[[1]]$se.linear[1], t_mde[2:3]))
 rownames(MDE_estimator_Linear_Betas) <- c("constant", "price", "sugar", "mushy")
-MDE_estimator_Linear_Betas
+return(MDE_estimator_Linear_Betas)
+}
+mde()
 }
 
 
