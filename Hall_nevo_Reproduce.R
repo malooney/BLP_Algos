@@ -93,7 +93,7 @@ summary( iv.simple.logit <- ivreg( log(share)- log(outshr)~ 0+ price+ sugar+
                                      z14 + z15 + z16 + z17 + z18 + z19 + z20, 
                                    data= cereal.data))
 }
-eii <- data.frame(eii= 1* simple.logit$coefficients[2]* cereal_ps3$price* (1- cereal_ps3$share))
+eii <- data.frame(eii= -1* simple.logit$coefficients[2]* cereal_ps3$price* (1- cereal_ps3$share))
 
 if(MDE==TRUE){
 Xlin = c("price",
@@ -166,7 +166,7 @@ starting.theta2 <- matrix( c(0.3772, 1.848, -0.0035, 0.081,
 # starting.theta2[3, c(3,5)] <- NA
 # starting.theta2[4, c(3,5)] <- NA
 
-rm(simple.logit, iv.simple.logit, eii, outshr, cdid, constant, demog_age, demog_income, demog_income_2, demog_kids, x1_1, cdid_demog, cereal_ps3, demogr, ps_2.mat)
+rm(simple.logit, iv.simple.logit, eii, outshr, cdid, constant, demog_age, demog_income, demog_income_2, demog_kids, x1_1, cdid_demog, cereal_ps3, demogr, ps_2.mat, dummy.names, K)
 
 oneRun <- function(.){ 
   estimateBLP1(Xlin = Xlin, 

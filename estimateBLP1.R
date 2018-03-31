@@ -869,17 +869,6 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
   
   theta.rc.out <- res$par
   
-  if(total.demogr > 0) {
-    used_RcCoefficients <-which(is.na(starting.theta2))
-    RcCoefficients <- c( Xrandom,
-                         kronecker( demographics, Xrandom, paste))
-    RcCoefficients <- RcCoefficients[-used_RcCoefficients]
-    names(theta.rc.out) <- RcCoefficients # full naming is done in summary
-    
-  } else {
-    names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
-  }
-  
   
   gradient.out <- blp.results$gradient
   jacob.out <- blp.results$jacobian
@@ -907,10 +896,21 @@ estimateBLP1 <- function(Xlin, Xexo, Xrandom, instruments, demographics,
     
   }
   
-  names(seRc.out)[1:K] <- Xrandom # full naming is done in summary
+  if(total.demogr > 0) {
+    used_RcCoefficients <-which(is.na(starting.theta2))
+    RcCoefficients <- c( Xrandom,
+                         kronecker( demographics, Xrandom, paste))
+    RcCoefficients <- RcCoefficients[-used_RcCoefficients]
+    names(theta.rc.out) <- RcCoefficients # full naming is done in summary
+    names(seRc.out) <- RcCoefficients # full naming is done in summary
+    
+  } else {
+    names(theta.rc.out)[1:K] <- Xrandom # full naming is done in summary
+    names(seRc.out)[1:K] <- Xrandom # full naming is done in summary
+  }
   
   
-  ### Waldstatistic
+  ### Wald Statistic
   # may need to include other tests, check with Chidmi.
   WaldStatistic<- t(matrix( theta.rc.out )) %*%
     solve(COV[-(1:length(Xlin)), -(1:length(Xlin)) ]) %*%
