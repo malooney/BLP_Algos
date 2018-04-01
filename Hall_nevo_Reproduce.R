@@ -27,6 +27,8 @@ source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/estimat
 
 source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/generics.R')
 
+source('/Users/malooney/Google Drive/digitalLibrary/*BLP_Algos/BLP_Algos/price_elasticity_matrix.R')
+
 nmkt <- 94;
 nbrn <- 24;
 constant <- data.frame("constant"= rep(1, times=nmkt*nbrn))
@@ -180,10 +182,10 @@ oneRun <- function(.){
                demographicData = demographicData,
                starting.guesses.theta2 = starting.theta2, 
                solver.control = list(maxeval = 5000,
-                                     solver.reltol= 1e-2), #outer tol
-               solver.method = "L-BFGS-B", 
+                                     solver.reltol= 1e-2), #outer tol.
+               solver.method = "BFGS_matlab", 
                starting.guesses.delta =  cereal.data$starting.delta, 
-               blp.control = list(inner.tol = 1e-6, 
+               blp.control = list(inner.tol = 1e-6, #inner tol.
                                   inner.maxit = 5000), 
                integration.control= list(method= "MC", 
                                          amountNodes= 20,
@@ -243,6 +245,10 @@ return(MDE_estimator_Linear_Betas)
 mde()
 }
 
+p_elas_list <- price_elasticity_matrix(list_name=multi_Run_cereal_Nevo,
+                                       numMarkets=nmkt,
+                                       numBrands=nbrn,
+                                       statistic=mean)
 
 
 
