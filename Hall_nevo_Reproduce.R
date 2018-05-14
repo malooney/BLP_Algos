@@ -33,7 +33,7 @@ nmkt <- 94;
 nbrn <- 24;
 constant <- data.frame("constant"= rep(1, times=nmkt*nbrn))
 cdid= data.frame("cdid"= rep(1:nmkt, each = nbrn, times = 1))  # gives the market id
-x1_1 <- data.frame(readMat("/Users/malooney/Desktop/Nevo_Hall_code/x1_1.mat"))
+x1_1 <- data.frame(readMat("/Users/malooney/Documents/*Econ Stuff/Nevo_Hall_code/x1_1.mat"))
 dummy.names <- sprintf("D%d",seq(1:24))
 colnames(x1_1) <- c("price", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8",
                     "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", 
@@ -95,7 +95,8 @@ summary( iv.simple.logit <- ivreg( log(share)- log(outshr)~ 0+ price+ sugar+
                                      z14 + z15 + z16 + z17 + z18 + z19 + z20, 
                                    data= cereal.data))
 }
-eii <- data.frame(eii= -1* simple.logit$coefficients[2]* cereal_ps3$price* (1- cereal_ps3$share))
+
+
 
 if(MDE==TRUE){
 Xlin = c("price",
@@ -130,7 +131,7 @@ instruments = c("z1", "z2", "z3", "z4", "z5", "z6", "z7", "z8", "z9", "z10",
 ns <- 1000
 
 
-ps_2.mat <- readMat("/Users/malooney/Desktop/Nevo_Hall_code/ps2.mat")
+ps_2.mat <- readMat("/Users/malooney/Documents/*Econ Stuff/Nevo_Hall_code/ps2.mat")
 
 demogr <- data.frame(ps_2.mat[["demogr"]])
 v <- matrix(ps_2.mat[["v"]], nrow=94)
@@ -168,7 +169,7 @@ starting.theta2 <- matrix( c(0.3772, 1.848, -0.0035, 0.081,
 # starting.theta2[3, c(3,5)] <- NA
 # starting.theta2[4, c(3,5)] <- NA
 
-rm(simple.logit, iv.simple.logit, eii, outshr, cdid, constant, demog_age, demog_income, demog_income_2, demog_kids, x1_1, cdid_demog, cereal_ps3, demogr, ps_2.mat, dummy.names, K)
+rm(simple.logit, iv.simple.logit, outshr, cdid, constant, demog_age, demog_income, demog_income_2, demog_kids, x1_1, cdid_demog, cereal_ps3, demogr, ps_2.mat, dummy.names, K)
 
 oneRun <- function(.){ 
   estimateBLP1(Xlin = Xlin, 
@@ -202,11 +203,11 @@ library(parallel)
 
 #cl <- makeCluster(8)
 
-start <- Sys.time()
+#start <- Sys.time()
 multi_Run_cereal_Nevo <- mclapply(X= 1:1, FUN= oneRun, mc.cores= 1)
-end <- Sys.time()
-time <- end- start
-time
+#end <- Sys.time()
+#time <- end- start
+#time
 
 #stopCluster(cl)
 #rm(cl)
@@ -248,7 +249,7 @@ mde()
 p_elas_list <- price_elasticity_matrix(list_name=multi_Run_cereal_Nevo,
                                        numMarkets=nmkt,
                                        numBrands=nbrn,
-                                       statistic=mean)
+                                       statistic=median)
 
 
 
