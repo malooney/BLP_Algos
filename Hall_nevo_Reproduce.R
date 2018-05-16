@@ -96,7 +96,10 @@ summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price+
                             data= cereal.data))
 } else{
 
-summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price+ sugar+ mushy, data= cereal.data))
+summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price + 
+                              sugar + 
+                              mushy, 
+                            data= cereal.data))
 }
 
 if(MDE==TRUE){
