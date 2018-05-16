@@ -68,8 +68,32 @@ cereal.data <- data.frame("constant"= constant,
 dummy.names <- paste(paste(dummy.names, collapse=" + "))
 
 if(MDE==TRUE){
-summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price+ D1 + D2 + D3 +
-                              D4 + D5 + D6 + D7 + D8 + D9 + D10 + D11 + D12 + D13 + D14 + D15 + D16 + D17 + D18 + D19 + D20 + D21 + D22 + D23 + D24, data= cereal.data))
+summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price+ 
+                              D1 + 
+                              D2 + 
+                              D3 +
+                              D4 + 
+                              D5 + 
+                              D6 + 
+                              D7 + 
+                              D8 + 
+                              D9 + 
+                              D10 +
+                              D11 + 
+                              D12 + 
+                              D13 + 
+                              D14 + 
+                              D15 + 
+                              D16 + 
+                              D17 + 
+                              D18 + 
+                              D19 + 
+                              D20 + 
+                              D21 + 
+                              D22 + 
+                              D23 + 
+                              D24, 
+                            data= cereal.data))
 } else{
 
 summary(simple.logit <- lm( log(share)- log(outshr)~ 0+ price+ sugar+ mushy, data= cereal.data))
